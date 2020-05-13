@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\MinPack">
+      <UniqueIdentifier>{746930a8-2344-4f47-9617-997521b69f36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Tools">
+      <UniqueIdentifier>{715c6f37-96c1-4429-b0c6-49a5ba4b7ab5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MinPack\chkder.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\covar.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\covar1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\dogleg.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\dpmpar.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\enorm.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\fdjac1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\fdjac2.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\hybrd.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\hybrd1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\hybrj.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\hybrj1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmder.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmder1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmdif.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmdif1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmpar.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmstr.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\lmstr1.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\qform.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\qrfac.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\qrsolv.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\r1mpyq.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\r1updt.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="MinPack\rwupdt.c">
+      <Filter>头文件\MinPack</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\ODE45.cpp">
+      <Filter>头文件\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\OrbitFun.cpp">
+      <Filter>头文件\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelFun.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Cartesian.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MinPack\cminpack.h">
+      <Filter>头文件\MinPack</Filter>
+    </ClInclude>
+    <ClInclude Include="MinPack\cminpackP.h">
+      <Filter>头文件\MinPack</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ODE45.h">
+      <Filter>头文件\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\OrbitFun.h">
+      <Filter>头文件\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\OrbitMath.h">
+      <Filter>头文件\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\VecMat.h">
+      <Filter>头文件\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Constant.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternHeader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelFun.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Cartesian.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

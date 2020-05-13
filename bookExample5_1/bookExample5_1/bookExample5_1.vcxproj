@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C40DB6A6-0ECF-4729-A1F4-B5BF11583D1F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>bookExample5_1</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Cartesian.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MinPack\chkder.c" />
+    <ClCompile Include="MinPack\covar.c" />
+    <ClCompile Include="MinPack\covar1.c" />
+    <ClCompile Include="MinPack\dogleg.c" />
+    <ClCompile Include="MinPack\dpmpar.c" />
+    <ClCompile Include="MinPack\enorm.c" />
+    <ClCompile Include="MinPack\fdjac1.c" />
+    <ClCompile Include="MinPack\fdjac2.c" />
+    <ClCompile Include="MinPack\hybrd.c" />
+    <ClCompile Include="MinPack\hybrd1.c" />
+    <ClCompile Include="MinPack\hybrj.c" />
+    <ClCompile Include="MinPack\hybrj1.c" />
+    <ClCompile Include="MinPack\lmder.c" />
+    <ClCompile Include="MinPack\lmder1.c" />
+    <ClCompile Include="MinPack\lmdif.c" />
+    <ClCompile Include="MinPack\lmdif1.c" />
+    <ClCompile Include="MinPack\lmpar.c" />
+    <ClCompile Include="MinPack\lmstr.c" />
+    <ClCompile Include="MinPack\lmstr1.c" />
+    <ClCompile Include="MinPack\qform.c" />
+    <ClCompile Include="MinPack\qrfac.c" />
+    <ClCompile Include="MinPack\qrsolv.c" />
+    <ClCompile Include="MinPack\r1mpyq.c" />
+    <ClCompile Include="MinPack\r1updt.c" />
+    <ClCompile Include="MinPack\rwupdt.c" />
+    <ClCompile Include="ModelFun.cpp" />
+    <ClCompile Include="Tools\ODE45.cpp" />
+    <ClCompile Include="Tools\OrbitFun.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Cartesian.h" />
+    <ClInclude Include="Constant.h" />
+    <ClInclude Include="ExternHeader.h" />
+    <ClInclude Include="MinPack\cminpack.h" />
+    <ClInclude Include="MinPack\cminpackP.h" />
+    <ClInclude Include="ModelFun.h" />
+    <ClInclude Include="Tools\ODE45.h" />
+    <ClInclude Include="Tools\OrbitFun.h" />
+    <ClInclude Include="Tools\OrbitMath.h" />
+    <ClInclude Include="Tools\VecMat.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
