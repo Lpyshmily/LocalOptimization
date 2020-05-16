@@ -26,7 +26,7 @@ int main()
 	}
 	// 至此，所有初始条件归一化完毕
 
-	/*
+	
 	// 先用春分点轨道根数进行求解
 	int flag;
 	// 将位置速度转化为春分点轨道根数
@@ -47,9 +47,9 @@ int main()
 	printf("7个初始协态变量值为:\n");
 	for (int j=2; j<=8; j++)
 		printf("%.6e,\n", Out[j]);
-	*/
-
 	
+
+	/*
 	// 用直角坐标系进行求解
 	int flag;
 	// 求解算法的一些参数设置
@@ -65,8 +65,20 @@ int main()
 	printf("7个初始协态变量值为:\n");
 	for (int j=2; j<=8; j++)
 		printf("%.6e,\n", Out[j]);
-	
+	*/
 
+	// 离散积分输出推力大小随时间的变化
+	if (flag>0)
+	{
+		int TimeNodeNum = 1000;
+		double* TimeNode = new double[TimeNodeNum];
+		double seg = tof/TimeNodeNum;
+		for (int i=0;i<TimeNodeNum;++i)
+			TimeNode[i] = seg*i;
+		TimeNode[TimeNodeNum-1] = tof;
+		OutputAmplitude(Out, ee0, m0, epsi, TimeNode, TimeNodeNum);
+		delete[] TimeNode;
+	}
 
 	stop = clock();
 	printf("计算用时为：%.3fs\n", (double)(stop-start)/CLOCKS_PER_SEC);

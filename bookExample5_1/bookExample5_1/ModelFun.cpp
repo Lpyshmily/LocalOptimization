@@ -394,7 +394,11 @@ int DynEquFuelOpt(double t, const double* x, double* dx, const double* dfpara)
 	for(j=0;j<3;j++)
 		alpha[j]/=norma;
 	rou=1.0-(Ispg0NU*norma/m+lm)/lam0; // 开关函数
-	u=2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
+	// u=2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
+	if (rou>0)
+		u = 0;
+	else
+		u = 1;
 
 	for(i=0;i<14;i++)
 		dx[i]=0.0;
@@ -525,4 +529,64 @@ int Fixed2PFuelOpt(double* Out, const double* ee0, const double* ee1, double m0,
 		num++;
 	}	
 	 return flag;
+}
+
+void OutputAmplitude(const double* Out, const double* ee0, double m0, double epsi, const double* TimeNode, int TimeNodeNum)
+{
+	double x[14] = {0.0};
+	V_Copy(x, ee0, 6);
+	x[6] = m0;
+	V_Copy(&x[7], &Out[2], 7);
+	double original_x[14] = {0.0};
+	V_Copy(original_x, x, 14);
+
+	double dfpara[2] = {0.0};
+	dfpara[0] = epsi;
+	dfpara[1] = Out[1];
+
+	double AbsTol[14] = {0.0};
+	for(int i=0;i<14;i++)
+		AbsTol[i]=1e-12;
+	double RelTol=1e-12;
+
+	FILE *fid = NULL;
+	FILE *ufid = fopen("amplitude.txt", "w");
+	int flag,NumPoint;
+	double work[140]={0.0};
+
+	double M[18]={0.0};
+	double dM[108]={0.0};
+	double D6=0.0;
+	double dD6[6]={0.0};
+	double ddM[1]={0.0};
+	double ddD6[1]={0.0};
+	double alpha[3] = {0.0}; // 推力方向单位矢量
+	double norma, rou, u;
+
+	for (int i=0;i<TimeNodeNum;++i)
+	{
+		V_Copy(x, original_x, 14);
+		
+		// 积分到第i个时间节点
+		flag = ode45(DynEquFuelOpt, x, dfpara, 0.0, TimeNode[i], 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid);
+		// 计算第i个时间节点的推力大小
+		MatMD(M, D6, dM, dD6,  ddM, ddD6, x, 2); // 计算M矩阵
+		for(int j=0;j<3;j++)
+		{
+			alpha[j]=0.0;
+			for(int k=0;k<6;k++)
+				alpha[j] -= M[k*3+j]*x[k+7]; // 由极大值原理确定推力方向
+		}
+		norma = enorm(3, alpha);
+		for(int j=0;j<3;j++)
+			alpha[j] /= norma;
+		rou = 1.0-(Ispg0NU*norma/x[6] + x[13])/Out[1]; // 开关函数
+		// u = 2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
+		if (rou>0)
+			u = 0;
+		else
+			u = 1;
+		fprintf(ufid, "%.6f, %.6f\n", TimeNode[i], u);
+	}
+	fclose(ufid);
 }

@@ -37,4 +37,6 @@ int ShootFunFuelOpt(int n, const double *x, double *fvec, int iflag, const doubl
 //计算成功时，返回1，否则返回0
 int Fixed2PFuelOpt(double* Out, const double* ee0, const double* ee1, double m0, double ft, double epsi, int MaxGuessNum);
 
+void OutputAmplitude(const double* Out, const double* ee0, double m0, double epsi, const double* TimeNode, int TimeNodeNum);
+
 #endif
