@@ -76,7 +76,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="gravity_assist.cpp" />
+    <ClCompile Include="GA_FOP.cpp" />
+    <ClCompile Include="GA_PSO.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MinPack\chkder.c" />
     <ClCompile Include="MinPack\covar.c" />
@@ -113,7 +114,7 @@
   <ItemGroup>
     <ClInclude Include="Constant.h" />
     <ClInclude Include="ExternHeader.h" />
-    <ClInclude Include="gravity_assist.h" />
+    <ClInclude Include="GA_PSO.h" />
     <ClInclude Include="MinPack\cminpack.h" />
     <ClInclude Include="MinPack\cminpackP.h" />
     <ClInclude Include="Tools\ODE45.h" />

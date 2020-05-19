@@ -1,10 +1,15 @@
-﻿生成启动时间为 2020/5/18 22:37:30。
+﻿生成启动时间为 2020/5/19 21:05:25。
      1>项目“D:\Programming\Github\LocalOptimization\bookExample5_2\bookExample5_2\bookExample5_2.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
-         D:\Software\VS2012\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt gravity_assist.cpp
-         gravity_assist.cpp
+         D:\Software\VS2012\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt GA_FOP.cpp
+         GA_FOP.cpp
+     1>d:\programming\github\localoptimization\bookexample5_2\bookexample5_2\ga_fop.cpp(111): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\software\vs2012\vc\include\stdio.h(218) : 参见“fopen”的声明
+     1>d:\programming\github\localoptimization\bookexample5_2\bookexample5_2\ga_fop.cpp(112): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 d:\software\vs2012\vc\include\stdio.h(218) : 参见“fopen”的声明
        Link:
-         D:\Software\VS2012\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.lib" /MACHINE:X86 Debug\gravity_assist.obj
+         D:\Software\VS2012\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Debug\bookExample5_2.lib" /MACHINE:X86 Debug\GA_FOP.obj
+         Debug\GA_PSO.obj
          Debug\main.obj
          Debug\chkder.obj
          Debug\covar.obj
@@ -42,4 +47,4 @@
 
 生成成功。
 
-已用时间 00:00:00.78
+已用时间 00:00:00.89

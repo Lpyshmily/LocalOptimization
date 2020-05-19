@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include "Constant.h"
-#include "gravity_assist.h"
+#include "GA_PSO.h"
 #include "ExternHeader.h"
 
 int main()
@@ -36,7 +36,7 @@ int main()
 
 
 	// **********
-	// 求解Lambert问题，使用PSO算法搜索最小变轨速度增量对应的引力辅助时刻
+	// 使用PSO算法搜索最小变轨速度增量对应的引力辅助时刻
 	double para[19];
 	V_Copy(para, rv0, 6);
 	V_Copy(&para[6], rv1, 6);
@@ -47,7 +47,7 @@ int main()
 	printf("脉冲引力辅助速度增量为%.3f\n", dv*VUnit);
 
 	std::cout << "下面进行PSO搜索" << std::endl;
-	dv = GA_PSO(rv0, rv1, MJD_MARS, rv_mars, 5);
+	dv = GA_PSO(rv0, rv1, rv_mars, 5);
 
 	stop = clock();
 	printf("计算用时为：%.3fs\n", (double)(stop-start)/CLOCKS_PER_SEC);
