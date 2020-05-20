@@ -6,7 +6,7 @@
 // 与任务要求有关，每次需要修改
 const double Tmax=0.33;//最大推力，N
 const double Isp=3800.0;//比冲，s
-const double MUnit=1500.0;//探测器质量归一化时的质量单位，kg
+const double MUnit=1000.0;//探测器质量归一化时的质量单位，kg
 
 // 定义归一化基准和一些常数，不需要修改
 const double mu=1.32712440018e20;//太阳引力系数，m^3/s^2

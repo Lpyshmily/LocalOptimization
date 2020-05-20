@@ -394,11 +394,13 @@ int DynEquFuelOpt(double t, const double* x, double* dx, const double* dfpara)
 	for(j=0;j<3;j++)
 		alpha[j]/=norma;
 	rou=1.0-(Ispg0NU*norma/m+lm)/lam0; // 开关函数
-	// u=2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
+	u=2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
+	/*
 	if (rou>0)
 		u = 0;
 	else
 		u = 1;
+	*/
 
 	for(i=0;i<14;i++)
 		dx[i]=0.0;
