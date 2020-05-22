@@ -1,7 +1,9 @@
 #include "ExternHeader.h"
+#include "GA_FOP.h"
 
-
-// 第一个参数只是为了ode45调用，在程序中不起作用
+// 根据14个积分变量x，计算其对应的导数dx
+// dfpara:[0],epsi;[1],lam0
+// 第一个参数t只是为了ode45调用，在程序中不起作用
 int GA_derivative(double t, const double* x, double* dx, const double* dfpara)
 {
 	double rv[6] = {0.0}, costate[7] = {0.0}, alpha[3] = {0.0};
@@ -151,11 +153,12 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 		fvec[12+i] = x0[10+i] - chi[3]*unit_in[i] + 1/rmin*kappa*A[i];
 
 	double H1 =  GA_Hamilton(x0, lam0, epsi);
-	// 计算新的协态变量
+	// 计算新的状态变量和协态变量
 	for (int i=0;i<3;++i)
 	{
-		x0[7+i] = x0[7+i] - chi[i];
-		x0[10+i] = chi[3]*unit_out[i] + 1/rmin*kappa*B[i];
+		x0[3+i] = x0[3+i] + dvg[i]; // 速度
+		x0[7+i] = x0[7+i] - chi[i]; // 位置协态
+		x0[10+i] = chi[3]*unit_out[i] + 1/rmin*kappa*B[i]; // 速度协态
 	}
 	double H2 = GA_Hamilton(x0, lam0, epsi);
 	// 静态条件偏差
@@ -181,7 +184,46 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	return 0;
 }
 
-void GA_FOP(const double* rv0, const double* rv1, double mjd_middle, const double* rv_middle)
+int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle)
 {
-	return;
+	double sfpara[22] = {0.0};
+	V_Copy(sfpara, rv0, 6);
+	sfpara[6] = m0;
+	V_Copy(&sfpara[7], rv1, 6);
+	sfpara[13] = tof;
+	sfpara[14] = epsi;
+	sfpara[15] = 0.0;
+	V_Copy(&sfpara[16], rv_middle, 6);
+
+	
+	int info, flag = 0;
+	int n = 17;
+	double x[17] = {0.0}, fvec[17] = {0.0}, wa[500] = {0.0};
+	double xtol = 1.0e-8;
+	
+	int num = 0;
+	while (num<MaxGuessNum)
+	{
+		for(int j=0;j<17;j++)
+				x[j]=(double)rand()/RAND_MAX-0.5; // 随机给出打靶变量初值
+		x[7]+=0.5; // 质量协态导数为负，且末端为0，因此初值必为正
+		x[0]+=0.5; // lambda0，归一化乘子，人为取正
+		x[16] += 0.5; // 引力辅助时间也要是正的
+		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 500); // info-hybrd1()的输出标志
+		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
+		{
+			sfpara[15]=1.0;
+			int _j = GA_fvec(n, x, fvec, 1, sfpara); // 利用同伦计算得到的协态初值，进行最后一次的积分求解（直接用这个较小的同伦参数，求解近似邦邦控制的结果）
+			if(fvec[0]>Out[0]) // 剩余质量为正，且满足打靶精度要求，停止
+			{
+				flag=1;
+				Out[0]=fvec[0];
+				V_Copy(&Out[1], x, 17);
+				break;
+			}
+			sfpara[15]=0.0;
+		}
+		num++;
+	}
+	return flag;
 }

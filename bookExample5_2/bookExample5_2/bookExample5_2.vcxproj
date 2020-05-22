@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClInclude Include="Constant.h" />
     <ClInclude Include="ExternHeader.h" />
+    <ClInclude Include="GA_FOP.h" />
     <ClInclude Include="GA_PSO.h" />
     <ClInclude Include="MinPack\cminpack.h" />
     <ClInclude Include="MinPack\cminpackP.h" />

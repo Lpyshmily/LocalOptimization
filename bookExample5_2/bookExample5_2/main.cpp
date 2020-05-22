@@ -2,6 +2,7 @@
 #include <ctime>
 #include "Constant.h"
 #include "GA_PSO.h"
+#include "GA_FOP.h"
 #include "ExternHeader.h"
 
 int main()
@@ -48,6 +49,21 @@ int main()
 
 	std::cout << "下面进行PSO搜索" << std::endl;
 	dv = GA_PSO(rv0, rv1, rv_mars, 5);
+
+	// 间接法求解引力辅助
+	// 求解算法的一些参数设置
+	double epsi = 0.2;//取定一个较小的同伦参数直接求解近似邦邦控制的结果
+	int MaxGuessNum = 100;//设置最大随机猜测次数
+	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
+	// 求解
+	double Out[18] = {0.0}; // 输出计算结果，0-剩余质量，1~17-17个需要打靶的协态初值
+	flag = GA_FOP(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars);
+	printf("求解成功%d\n",flag);
+	printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+	// printf("lamda0为:%.6e\n", Out[1]);
+	printf("17个打靶变量值为:\n");
+	for (int j=1; j<=17; j++)
+		printf("%.6e,\n", Out[j]);
 
 	stop = clock();
 	printf("计算用时为：%.3fs\n", (double)(stop-start)/CLOCKS_PER_SEC);

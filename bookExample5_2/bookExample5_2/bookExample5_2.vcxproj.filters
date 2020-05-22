@@ -158,5 +158,8 @@
     <ClInclude Include="GA_PSO.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="GA_FOP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

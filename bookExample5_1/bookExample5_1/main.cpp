@@ -10,8 +10,9 @@ int main()
 	clock_t start, stop;
 	start = clock();
 
-	double m0 = 1000.0; // 初始质量，单位kg
-	m0 = m0/MUnit; // 质量归一化
+	// double m0 = 1500.0; // 初始质量，单位kg
+	// m0 = m0/MUnit; // 质量归一化
+	double m0 = 1.0;
 	double tof = 1000.0*86400.0/TUnit; // 飞行时间为1000天，进行归一化
 	// 初始位置和速度，单位分别为AU和AU/a
 	double rv0[6] = { 9.708322e-1, 2.375844e-1,	-1.671055e-6, -1.598191, 6.081958, 9.443368e-5 };
