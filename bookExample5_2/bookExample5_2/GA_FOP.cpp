@@ -123,7 +123,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	// normvinfin==normvinfout
 	double vinfin[3], vinfout[3], normvinfin, normvinfout, unit_in[3], unit_out[3];
 	V_Minus(vinfin, &x0[3], &rv_tm[3], 3);
-	V_Add(vinfout, vinfin, dvg, 3);
+	V_Add(vinfout, &rv_tm[3], dvg, 3);
 	normvinfin = V_Norm2(vinfin, 3);
 	normvinfout = V_Norm2(vinfout, 3);
 	V_Divid(unit_in, vinfin, normvinfin, 3);
@@ -136,7 +136,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 
 	double A[3], B[3], C[3], temp, c;
 	temp = 1/(4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)));
-	for (int i=0;i<3;++i)
+	for (int i=1;i<3;++i)
 	{
 		A[i] = rp/normvinfin*(temp*(unit_out[i] - cos(theta)*unit_in[i]) - unit_in[i]);
 		B[i] = rp/normvinfout*(temp*(unit_in[i] - cos(theta)*unit_out[i]) - unit_out[i]);
@@ -168,8 +168,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 
 
 	// 第二阶段的积分
-	// flag = ode45(GA_derivative, x0, dfpara,  tm*TOF*86400/TUnit,  tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
-	flag = ode45(GA_derivative, x0, dfpara, 0.0, tf-tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	flag = ode45(GA_derivative, x0, dfpara,  tm*TOF*86400/TUnit,  tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
 
 	for (int i=0;i<6;++i)
 		fvec[i] = x0[i] - rvf[i];
@@ -198,27 +197,19 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 
 	
 	int info, flag = 0;
-	const int n = 17;
+	int n = 17;
 	double x[17] = {0.0}, fvec[17] = {0.0}, wa[500] = {0.0};
 	double xtol = 1.0e-8;
 	
 	int num = 0;
-	double amp, phi, delta;
 	while (num<MaxGuessNum)
 	{
 		for(int j=0;j<17;j++)
 				x[j]=(double)rand()/RAND_MAX-0.5; // 随机给出打靶变量初值
-		x[0] += 0.5; // lambda0，归一化乘子，人为取正
-		x[7] += 0.5; // 质量协态导数为负，且末端为0，因此初值必为正
-		amp = x[13];
-		phi = (x[14] - 0.5)*DPI;
-		delta = x[15]*D2PI;
-		x[13] = sqrt(mpp/rmin)*amp*cos(phi)*cos(delta);
-		x[14] = sqrt(mpp/rmin)*amp*cos(phi)*sin(delta);
-		x[15] = sqrt(mpp/rmin)*amp*sin(phi);
-		x[16] = 0.35; // 引力辅助时间也要是正的
+		x[7]+=0.5; // 质量协态导数为负，且末端为0，因此初值必为正
+		x[0]+=0.5; // lambda0，归一化乘子，人为取正
+		x[16] += 0.5; // 引力辅助时间也要是正的
 		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 500); // info-hybrd1()的输出标志
-		std::cout << n << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 		{
 			sfpara[15]=1.0;

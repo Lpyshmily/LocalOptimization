@@ -198,8 +198,8 @@ double GA_PSO(const double* rv0, const double* rv1, const double* rv_middle, int
 	double fBestEver = 1e10, xBestEver[D];
 	for(int i=0; i<psotime; i++)
 	{
-		// cout<<i+1<<endl;
-		PSO(GA_PSO_obj, xbest, fbest, sfpara, D, 20, wa, 500, 0);		
+		cout<<i+1<<endl;
+		PSO(GA_PSO_obj, xbest, fbest, sfpara, D, 20, wa);		
 		if(fbest <= fBestEver)
 		{
 			fBestEver = fbest;
