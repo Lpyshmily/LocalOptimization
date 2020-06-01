@@ -6,6 +6,8 @@
 // 第一个参数t只是为了ode45调用，在程序中不起作用
 int GA_derivative(double t, const double* x, double* dx, const double* dfpara)
 {
+	int i;
+	
 	double rv[6] = {0.0}, costate[7] = {0.0}, alpha[3] = {0.0};
 	double m;
 	V_Copy(rv, x, 6);
@@ -16,13 +18,13 @@ int GA_derivative(double t, const double* x, double* dx, const double* dfpara)
 
 	// 计算推力方向单位矢量和推力幅值大小
 	double norm_lambdaV = V_Norm2(&costate[3], 3); // 速度协态的范数
-	for (int i=0;i<3;++i)
+	for (i=0;i<3;++i)
 		alpha[i] = -costate[i+3]/norm_lambdaV;
 	double rou = 1.0 - (Ispg0NU*norm_lambdaV/m + costate[6])/lam0; // 开关函数
 	double u = 2.0*epsi/(rou+2.0*epsi+sqrt(rou*rou+4.0*epsi*epsi)); // 对数型同伦指标下的推力
 
 	double r = V_Norm2(rv, 3);
-	for (int i=0;i<3;++i)
+	for (i=0;i<3;++i)
 	{
 		dx[i] = x[i+3]; // 3个位置分量的导数是3个速度分量
 		dx[i+3] = -muNU/(r*r*r)*rv[i] + u*TmaxNU/m*alpha[i];
@@ -51,12 +53,12 @@ double GA_Hamilton(const double* x, double lam0, double epsi)
 	double dfpara[2];
 	dfpara[0] = epsi;
 	dfpara[1] = lam0;
-	double dx[14];
+	double dx[14] = {0.0};
 	int flag = GA_derivative(0, x, dx, dfpara);
 
 	double H = 0.0;
 	H = V_Dot(costate, dx, 7);
-	H = H + (lam0*TmaxNU/Ispg0NU*(u-epsi*log(u*(1.0-u))));
+	H = H + (lam0*TmaxNU/Ispg0NU*( u-epsi*log(u*(1.0-u)) ));
 	return H;
 }
 
@@ -112,7 +114,8 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	FILE *fid1 = fopen("temp1.txt", "w");
 	FILE *fid2 = fopen("temp2.txt", "w");
 	int flag,NumPoint;
-	double work[140]={0.0};
+	// double work[140]={0.0};
+	double work[200]={0.0};
 	flag = ode45(GA_derivative, x0, dfpara,  0.0, tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid1);
 	// 计算一部分偏差
 	// 引力辅助位置约束
@@ -132,10 +135,11 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	// 互补松弛条件
 	double theta = acos(V_Dot(unit_in, unit_out, 3));
 	double rp = mpp/(normvinfin*normvinfout) * (1/sin(theta/2) - 1);
-	fvec[11] = kappa*(1 - rp/rmin);
+	// fvec[11] = kappa*(1 - rp/rmin);
+	fvec[11] = 1 - rp/rmin;
 
 	double A[3], B[3], C[3], temp, c;
-	temp = 1/(4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)));
+	temp = 1/( 4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)) );
 	for (int i=0;i<3;++i)
 	{
 		A[i] = rp/normvinfin*(temp*(unit_out[i] - cos(theta)*unit_in[i]) - unit_in[i]);
@@ -216,7 +220,7 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[13] = sqrt(mpp/rmin)*amp*cos(phi)*cos(delta);
 		x[14] = sqrt(mpp/rmin)*amp*cos(phi)*sin(delta);
 		x[15] = sqrt(mpp/rmin)*amp*sin(phi);
-		x[16] = 0.35; // 引力辅助时间也要是正的
+		x[16] += 0.5; // 引力辅助时间也要是正的
 		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 500); // info-hybrd1()的输出标志
 		std::cout << n << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
