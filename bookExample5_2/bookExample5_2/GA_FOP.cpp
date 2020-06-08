@@ -111,8 +111,10 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	double RelTol=1e-12;
 
 	// FILE *fid = NULL;//fopen("temp.txt","w");//如果设定有效文件路径，最后需要关闭文件
-	FILE *fid1 = fopen("temp1.txt", "w");
-	FILE *fid2 = fopen("temp2.txt", "w");
+	// FILE *fid1 = fopen("temp1.txt", "w");
+	// FILE *fid2 = fopen("temp2.txt", "w");
+	FILE *fid1 = NULL;
+	FILE *fid2 = NULL;
 	int flag,NumPoint;
 	// double work[140]={0.0};
 	double work[200]={0.0};
@@ -173,7 +175,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 
 	// 第二阶段的积分
 	// flag = ode45(GA_derivative, x0, dfpara,  tm*TOF*86400/TUnit,  tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
-	flag = ode45(GA_derivative, x0, dfpara, 0.0, tf-tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	flag = ode45(GA_derivative, x0, dfpara, tm*TOF*86400/TUnit, tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
 
 	for (int i=0;i<6;++i)
 		fvec[i] = x0[i] - rvf[i];
@@ -184,12 +186,12 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	{
 		fvec[0]=x0[6];
 	}
-	fclose(fid1);
-	fclose(fid2);
+	// fclose(fid1);
+	// fclose(fid2);
 	return 0;
 }
 
-int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle)
+int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[22] = {0.0};
 	V_Copy(sfpara, rv0, 6);
@@ -203,7 +205,7 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 	
 	int info, flag = 0;
 	const int n = 17;
-	double x[17] = {0.0}, fvec[17] = {0.0}, wa[500] = {0.0};
+	double x[17] = {0.0}, fvec[17] = {0.0}, wa[600] = {0.0}; // wa的维数至少是544
 	double xtol = 1.0e-8;
 	
 	int num = 0;
@@ -214,14 +216,16 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 				x[j]=(double)rand()/RAND_MAX-0.5; // 随机给出打靶变量初值
 		x[0] += 0.5; // lambda0，归一化乘子，人为取正
 		x[7] += 0.5; // 质量协态导数为负，且末端为0，因此初值必为正
-		amp = x[13];
-		phi = (x[14] - 0.5)*DPI;
-		delta = x[15]*D2PI;
+		x[12] += 0.5; // 不等式约束对应的乘子为正
+		amp = x[13] + 0.5;
+		phi = x[14]*DPI;
+		delta = (x[15]+0.5)*D2PI;
 		x[13] = sqrt(mpp/rmin)*amp*cos(phi)*cos(delta);
 		x[14] = sqrt(mpp/rmin)*amp*cos(phi)*sin(delta);
 		x[15] = sqrt(mpp/rmin)*amp*sin(phi);
-		x[16] += 0.5; // 引力辅助时间也要是正的
-		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 500); // info-hybrd1()的输出标志
+		// x[16] += 0.5; // 引力辅助时间也要是正的
+		x[16] = x[16]/5 + PSO_t;
+		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 2000); // info-hybrd1()的输出标志
 		std::cout << n << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 		{

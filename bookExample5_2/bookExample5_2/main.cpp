@@ -38,6 +38,7 @@ int main()
 
 	// **********
 	// 使用PSO算法搜索最小变轨速度增量对应的引力辅助时刻
+	/*
 	double para[19];
 	V_Copy(para, rv0, 6);
 	V_Copy(&para[6], rv1, 6);
@@ -46,18 +47,20 @@ int main()
 	double x0 = 0.392329395729;
 	double dv = GA_PSO_obj(&x0, para);
 	printf("脉冲引力辅助速度增量为%.3f\n", dv*VUnit);
+	*/
 
 	std::cout << "下面进行PSO搜索" << std::endl;
-	dv = GA_PSO(rv0, rv1, rv_mars, 5);
+	double PSO_t = GA_PSO(rv0, rv1, rv_mars, 5);
+	printf("引力辅助时刻为%.3f\n", PSO_t);
 
 	// 间接法求解引力辅助
 	// 求解算法的一些参数设置
-	double epsi = 1.0;//取定一个较小的同伦参数直接求解近似邦邦控制的结果
-	int MaxGuessNum = 100;//设置最大随机猜测次数
+	double epsi = 1.0;
+	int MaxGuessNum = 500;//设置最大随机猜测次数
 	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
 	// 求解
 	double Out[18] = {0.0}; // 输出计算结果，0-剩余质量，1~17-17个需要打靶的协态初值
-	flag = GA_FOP(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars);
+	flag = GA_FOP(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars, PSO_t);
 	printf("求解成功%d\n",flag);
 	printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
 	// printf("lamda0为:%.6e\n", Out[1]);

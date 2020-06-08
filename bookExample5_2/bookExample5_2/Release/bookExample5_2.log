@@ -1,0 +1,87 @@
+﻿生成启动时间为 2020/6/5 11:13:37。
+     1>项目“D:\Programming\Github\LocalOptimization\bookExample5_2\bookExample5_2\bookExample5_2.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         D:\Software\VS2012\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt GA_FOP.cpp GA_PSO.cpp main.cpp Tools\Lambert.cpp Tools\ODE45.cpp Tools\OrbitFun.cpp Tools\PSO.CPP Tools\RungeKutta.CPP Tools\VecMat.cpp
+         GA_FOP.cpp
+     1>GA_FOP.cpp(114): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 D:\Software\VS2012\VC\include\stdio.h(218) : 参见“fopen”的声明
+     1>GA_FOP.cpp(115): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 D:\Software\VS2012\VC\include\stdio.h(218) : 参见“fopen”的声明
+         GA_PSO.cpp
+         main.cpp
+         Lambert.cpp
+         ODE45.cpp
+         OrbitFun.cpp
+         PSO.CPP
+         RungeKutta.CPP
+         VecMat.cpp
+         D:\Software\VS2012\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TC /analyze- /errorReport:prompt MinPack\chkder.c MinPack\covar.c MinPack\covar1.c MinPack\dogleg.c MinPack\dpmpar.c MinPack\enorm.c MinPack\fdjac1.c MinPack\fdjac2.c MinPack\hybrd.c MinPack\hybrd1.c MinPack\hybrj.c MinPack\hybrj1.c MinPack\lmder.c MinPack\lmder1.c MinPack\lmdif.c MinPack\lmdif1.c MinPack\lmpar.c MinPack\lmstr.c MinPack\lmstr1.c MinPack\qform.c MinPack\qrfac.c MinPack\qrsolv.c MinPack\r1mpyq.c MinPack\r1updt.c MinPack\rwupdt.c
+         chkder.c
+         covar.c
+         covar1.c
+         dogleg.c
+         dpmpar.c
+         enorm.c
+         fdjac1.c
+         fdjac2.c
+         hybrd.c
+         hybrd1.c
+         hybrj.c
+         hybrj1.c
+         lmder.c
+         lmder1.c
+         lmdif.c
+         lmdif1.c
+         lmpar.c
+         lmstr.c
+         lmstr1.c
+         qform.c
+         正在编译...
+         qrfac.c
+         qrsolv.c
+         r1mpyq.c
+         r1updt.c
+         rwupdt.c
+       Link:
+         D:\Software\VS2012\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.lib" /MACHINE:X86 /SAFESEH Release\GA_FOP.obj
+         Release\GA_PSO.obj
+         Release\main.obj
+         Release\chkder.obj
+         Release\covar.obj
+         Release\covar1.obj
+         Release\dogleg.obj
+         Release\dpmpar.obj
+         Release\enorm.obj
+         Release\fdjac1.obj
+         Release\fdjac2.obj
+         Release\hybrd.obj
+         Release\hybrd1.obj
+         Release\hybrj.obj
+         Release\hybrj1.obj
+         Release\lmder.obj
+         Release\lmder1.obj
+         Release\lmdif.obj
+         Release\lmdif1.obj
+         Release\lmpar.obj
+         Release\lmstr.obj
+         Release\lmstr1.obj
+         Release\qform.obj
+         Release\qrfac.obj
+         Release\qrsolv.obj
+         Release\r1mpyq.obj
+         Release\r1updt.obj
+         Release\rwupdt.obj
+         Release\Lambert.obj
+         Release\ODE45.obj
+         Release\OrbitFun.obj
+         Release\PSO.obj
+         Release\RungeKutta.obj
+         Release\VecMat.obj
+         正在生成代码
+         已完成代码的生成
+         bookExample5_2.vcxproj -> D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.exe
+     1>已完成生成项目“D:\Programming\Github\LocalOptimization\bookExample5_2\bookExample5_2\bookExample5_2.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:04.60
