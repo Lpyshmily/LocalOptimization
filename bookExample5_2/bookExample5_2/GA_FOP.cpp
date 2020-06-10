@@ -86,7 +86,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	double tf = sfpara[13];
 	double epsi = sfpara[14];
 	int outflag = NINT(sfpara[15]);
-	// 获取tm时刻火星位置
+	// 获取MJD_MARS时刻火星位置
 	double rv_mars[6];
 	V_Copy(rv_mars, &sfpara[16], 6);
 
@@ -116,8 +116,7 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	FILE *fid1 = NULL;
 	FILE *fid2 = NULL;
 	int flag,NumPoint;
-	// double work[140]={0.0};
-	double work[200]={0.0};
+	double work[140]={0.0};
 	flag = ode45(GA_derivative, x0, dfpara,  0.0, tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid1);
 	// 计算一部分偏差
 	// 引力辅助位置约束
@@ -138,7 +137,9 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	double theta = acos(V_Dot(unit_in, unit_out, 3));
 	double rp = mpp/(normvinfin*normvinfout) * (1/sin(theta/2) - 1);
 	// fvec[11] = kappa*(1 - rp/rmin);
-	fvec[11] = 1 - rp/rmin;
+	// fvec[11] = 1 - rp/rmin;
+	// fvec[11] = rmin - rp;
+	fvec[11] = rp - rmin;
 
 	double A[3], B[3], C[3], temp, c;
 	temp = 1/( 4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)) );
@@ -225,8 +226,48 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[15] = sqrt(mpp/rmin)*amp*sin(phi);
 		// x[16] += 0.5; // 引力辅助时间也要是正的
 		x[16] = x[16]/5 + PSO_t;
+
+		// 采用别人的猜测值,epsi=0.0004
+		x[0] = 0.886331885090318;
+		x[1] = -0.232843818639906;
+        x[2] = -0.323199196825617;
+        x[3] = -3.489197236357714e-2;
+        x[4] = 4.887528446948729e-2;
+        x[5] = -3.647043214012526e-2;
+        x[6] = -1.469883220237891e-2;
+		x[7] = 0.193617319914406;
+		x[8] = 2.769304291725437e-2;
+        x[9] = -6.427471729128760e-2;
+        x[10] = 8.322771108406339e-2;
+        x[11] = -2.796801672665753e-2;
+		x[12] = 2.223873145766116e-2;
+		x[13] = 0.402761078340053 / D2PI;
+        x[14] = 0.569791476352286 / D2PI;
+		x[15] = -1.150785849667806e-2 / D2PI;
+        x[16] = 0.387866772588831;
+		// epsi=0.00065
+		x[0] = 0.886329832019311;
+		x[1] = -0.232846027567215;
+        x[2] = -0.323202727185663;
+        x[3] = -3.489300540498072e-2;
+        x[4] = 4.887568994383828e-2;
+        x[5] = -3.647082370879217e-2;
+        x[6] = -1.469883504438131e-2;
+		x[7] = 0.193617559195909;
+		x[8] = 2.769202524818386e-2;
+        x[9] = -6.427578484627385e-2;
+        x[10] = 8.322784992898068e-2;
+        x[11] = -2.796800324263587e-2;
+		x[12] = 2.223856139577682e-2;
+        // x[12] = 2.223856139577682e-2 * rmin;
+		x[13] = 0.402765255495293 / D2PI;
+        x[14] = 0.569788871739337 / D2PI;
+		x[15] = -1.150816805088274e-2 / D2PI;
+        x[16] = 0.387866422911783;
+		// x[0] = sqrt(1 - V_Dot(&x[1], &x[1], 12));
+
 		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 2000); // info-hybrd1()的输出标志
-		std::cout << n << std::endl;
+		// std::cout << n << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 		{
 			sfpara[15]=1.0;

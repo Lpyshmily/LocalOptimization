@@ -53,9 +53,11 @@ int main()
 	double PSO_t = GA_PSO(rv0, rv1, rv_mars, 5);
 	printf("引力辅助时刻为%.3f\n", PSO_t);
 
+
+	
 	// 间接法求解引力辅助
 	// 求解算法的一些参数设置
-	double epsi = 1.0;
+	double epsi = 0.00065;
 	int MaxGuessNum = 500;//设置最大随机猜测次数
 	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
 	// 求解
@@ -67,6 +69,7 @@ int main()
 	printf("17个打靶变量值为:\n");
 	for (int j=1; j<=17; j++)
 		printf("%.6e,\n", Out[j]);
+	
 
 	stop = clock();
 	printf("计算用时为：%.3fs\n", (double)(stop-start)/CLOCKS_PER_SEC);
