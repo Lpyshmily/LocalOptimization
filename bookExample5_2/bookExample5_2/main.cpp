@@ -57,7 +57,7 @@ int main()
 	
 	// 间接法求解引力辅助
 	// 求解算法的一些参数设置
-	double epsi = 0.00065;
+	double epsi = 2.0e-6;
 	int MaxGuessNum = 500;//设置最大随机猜测次数
 	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
 	// 求解
