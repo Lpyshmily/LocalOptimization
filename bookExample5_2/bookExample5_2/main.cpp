@@ -9,7 +9,7 @@ int main()
 {
 	clock_t start, stop;
 	start = clock();
-	int flag;
+	int flag, i;
 
 	// **********
 	// 初始条件设定与归一化
@@ -18,20 +18,21 @@ int main()
 	double rv1[6] = { -5.204974, 1.495369, 1.102444e-1, -7.936872e-1, -2.523063, 2.823220e-2 };
 	// 将初始和末端的速度按照Constant.h中的基准进行归一化
 	// 根据Constant.h中的时间归一化基准，一年归一化的结果应该是2pi
-	for (int i=3;i<6;++i)
+	for (i=3;i<6;++i)
 	{
-		rv0[i] = rv0[i]/D2PI;
-		rv1[i] = rv1[i]/D2PI;
+		rv0[i] = rv0[i]/(365.25*86400)*TUnit;
+		rv1[i] = rv1[i]/(365.25*86400)*TUnit;
+		// rv0[i] = rv0[i]/D2PI;
+		// rv1[i] = rv1[i]/D2PI;
 	}
 	// 火星经典轨道根数转换为位置速度
 	double coe_mars[6] = { 1.52363312, 0.09327933, 1.84785414, 49.48935357, 286.67090811, 328.88755274};
-	for (int i=2;i<6;++i)
+	for (i=2;i<6;++i)
 		coe_mars[i]  = coe_mars[i]*D2R;
 	double rv_mars[6] = {0.0};
 	coe2rv(flag, rv_mars, coe_mars, muNU);
 
-	double m0 = 20000.0;
-	m0 = m0/MUnit;
+	double m0 = 1.0;
 	double tof = 2201*86400/TUnit;
 	// **********
 
@@ -57,8 +58,8 @@ int main()
 	
 	// 间接法求解引力辅助
 	// 求解算法的一些参数设置
-	double epsi = 2.0e-6;
-	int MaxGuessNum = 500;//设置最大随机猜测次数
+	double epsi = 1.0; // 同伦参数设置为1.0
+	int MaxGuessNum = 100;//设置最大随机猜测次数
 	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
 	// 求解
 	double Out[18] = {0.0}; // 输出计算结果，0-剩余质量，1~17-17个需要打靶的协态初值

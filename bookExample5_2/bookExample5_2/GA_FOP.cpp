@@ -119,12 +119,12 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	double work[140]={0.0};
 	flag = ode45(GA_derivative, x0, dfpara,  0.0, tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid1);
 	// 计算一部分偏差
-	// 引力辅助位置约束
+	// 引力辅助位置约束,7-9
 	double rv_tm[6];
 	rv02rvf(flag, rv_tm, rv_mars, MJD_MARS*86400/TUnit, (MJD0+tm*TOF)*86400/TUnit, muNU);
 	for (int i=0;i<3;++i)
 		fvec[7+i] = x0[i] - rv_tm[i];
-	// normvinfin==normvinfout
+	// normvinfin==normvinfout,10
 	double vinfin[3], vinfout[3], normvinfin, normvinfout, unit_in[3], unit_out[3];
 	V_Minus(vinfin, &x0[3], &rv_tm[3], 3);
 	V_Add(vinfout, vinfin, dvg, 3);
@@ -133,13 +133,13 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	V_Divid(unit_in, vinfin, normvinfin, 3);
 	V_Divid(unit_out, vinfout, normvinfout, 3);
 	fvec[10] = normvinfin - normvinfout;
-	// 互补松弛条件
+	// 互补松弛条件,11
 	double theta = acos(V_Dot(unit_in, unit_out, 3));
-	double rp = mpp/(normvinfin*normvinfout) * (1/sin(theta/2) - 1);
-	// fvec[11] = kappa*(1 - rp/rmin);
+	double rp = mpp/(normvinfin*normvinfout) * (1/sin(theta/2) - 1)/rmin;
+	fvec[11] = kappa*(1 - rp);
 	// fvec[11] = 1 - rp/rmin;
 	// fvec[11] = rmin - rp;
-	fvec[11] = rp - rmin;
+	// fvec[11] = rp - rmin;
 
 	double A[3], B[3], C[3], temp, c;
 	temp = 1/( 4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)) );
@@ -155,9 +155,9 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 		am[i] = -muNU/(r_tm*r_tm*r_tm)*rv_tm[i];
 	c = V_Dot(C, am, 3);
 
-	// tm-时刻速度协态
+	// tm-时刻速度协态,12-14
 	for (int i=0;i<3;++i)
-		fvec[12+i] = x0[10+i] - chi[3]*unit_in[i] + 1/rmin*kappa*A[i];
+		fvec[12+i] = x0[10+i] - chi[3]*unit_in[i] + kappa*A[i];
 
 	double H1 =  GA_Hamilton(x0, lam0, epsi);
 	// 计算新的状态变量和协态变量
@@ -165,13 +165,13 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	{
 		x0[3+i] = x0[3+i] + dvg[i]; // 速度
 		x0[7+i] = x0[7+i] - chi[i]; // 位置协态
-		x0[10+i] = chi[3]*unit_out[i] + 1/rmin*kappa*B[i]; // 速度协态
+		x0[10+i] = chi[3]*unit_out[i] + kappa*B[i]; // 速度协态
 	}
 	double H2 = GA_Hamilton(x0, lam0, epsi);
-	// 静态条件偏差
+	// 静态条件偏差,15
 	double tempu[3];
 	V_Minus(tempu, unit_out, unit_in, 3);
-	fvec[15] = H1 - H2 - V_Dot(chi, &rv_tm[3], 3) + chi[3]*V_Dot(tempu, am, 3) - 1/rmin*kappa*c;
+	fvec[15] = H1 - H2 - V_Dot(chi, &rv_tm[3], 3) + chi[3]*V_Dot(tempu, am, 3) - kappa*c;
 
 
 	// 第二阶段的积分
@@ -192,6 +192,70 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	return 0;
 }
 
+// 打靶变量共17个
+// [0]:lam0
+// [1-7]:7,初始时刻协态变量
+// [8-11]:4,等式约束乘子
+// [12]:不等式约束乘子
+// [13-15]:3,速度增量
+// [16]:引力辅助时间
+void guess2lam(const double* guessValue, double* lamValue)
+{
+	double temp1, temp2;
+	int i;
+	// 用1个猜测值作为前8个打靶变量的norm，然后根据协态归一化条件计算出5个乘子的norm
+	double norm1, norm2;
+	norm1 = guessValue[0];
+	norm2 = sqrt(1 - norm1*norm1);
+	// 用7个猜测值，结合norm1，产生前8个打靶变量
+	double alpha1[7];
+	V_Copy(alpha1, &guessValue[1], 7);
+	for (i=0;i<3;++i)
+		alpha1[i]  = alpha1[i]*0.5*DPI;
+	alpha1[3] = (alpha1[3] - 0.5)*DPI;
+	alpha1[4] = alpha1[4]*D2PI;
+	alpha1[5] = (alpha1[5] - 0.5)*DPI;
+	alpha1[6] = alpha1[6]*D2PI;
+	
+	lamValue[0] = norm1*sin(alpha1[0]);
+	temp1 = norm1*cos(alpha1[0])*cos(alpha1[1]);
+	temp2 = temp1*sin(alpha1[2]);
+	lamValue[1] = temp2*cos(alpha1[3])*cos(alpha1[4]);
+	lamValue[2] = temp2*cos(alpha1[3])*sin(alpha1[4]);
+	lamValue[3] = temp2*sin(alpha1[3]);
+	temp2 = temp1*cos(alpha1[2]);
+	lamValue[4] = temp2*cos(alpha1[5])*cos(alpha1[6]);
+	lamValue[5] = temp2*cos(alpha1[5])*sin(alpha1[6]);
+	lamValue[6] = temp2*sin(alpha1[5]);
+	
+	lamValue[7] = norm1*cos(alpha1[0])*sin(alpha1[1]);
+	// 用4个猜测值，结合norm2，产生5个约束的乘子
+	double alpha2[4];
+	V_Copy(alpha2, &guessValue[8], 4);
+	alpha2[0] = alpha2[0]*0.5*DPI;
+	alpha2[1] = (alpha2[1] - 0.5)*DPI;
+	alpha2[2] = (alpha2[2] - 0.5)*DPI;
+	alpha2[3] = alpha2[3]*D2PI;
+	temp1 = norm2*cos(alpha2[0]);
+	temp2 = temp1*cos(alpha2[1]);
+	lamValue[8] = temp2*cos(alpha2[2])*cos(alpha2[3]);
+	lamValue[9] = temp2*cos(alpha2[2])*sin(alpha2[3]);
+	lamValue[10] = temp2*sin(alpha2[2]);
+	lamValue[11] = temp1*sin(alpha2[1]);
+	lamValue[12] = norm2*sin(alpha2[0]);
+	// 用1个猜测值，产生速度增量幅值
+	double vAmplitude = sqrt(mpp/rmin)*guessValue[12];
+	// 用2个猜测值，结合vAmplitude，产生3个速度分量
+	double phi, delta;
+	phi = (guessValue[13] - 0.5)*DPI;
+	delta = guessValue[14]*D2PI;
+	lamValue[13] = vAmplitude*cos(phi)*cos(delta);
+	lamValue[14] = vAmplitude*cos(phi)*sin(delta);
+	lamValue[15] = vAmplitude*sin(phi);
+	// 用1个猜测值，产生引力辅助时刻
+	lamValue[16] = (2.0 + guessValue[15])*365.25/2201;
+}
+
 int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[22] = {0.0};
@@ -207,12 +271,21 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 	int info, flag = 0;
 	const int n = 17;
 	double x[17] = {0.0}, fvec[17] = {0.0}, wa[600] = {0.0}; // wa的维数至少是544
+	double guessArray[16] = {0.0};
 	double xtol = 1.0e-8;
 	
 	int num = 0;
-	double amp, phi, delta;
+	int j;
+	// double amp, phi, delta;
 	while (num<MaxGuessNum)
 	{
+		for (j=0; j<16; ++j)
+			guessArray[j] = (double)rand()/RAND_MAX;
+		guess2lam(guessArray, x);
+		for (j=0;j<17;++j)
+			printf("%16.6e%s%\n",x[j],",");
+		printf("\n");
+		/*
 		for(int j=0;j<17;j++)
 				x[j]=(double)rand()/RAND_MAX-0.5; // 随机给出打靶变量初值
 		x[0] += 0.5; // lambda0，归一化乘子，人为取正
@@ -226,67 +299,9 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[15] = sqrt(mpp/rmin)*amp*sin(phi);
 		// x[16] += 0.5; // 引力辅助时间也要是正的
 		x[16] = x[16]/5 + PSO_t;
-
-		// 采用别人的猜测值,epsi=0.0004
-		x[0] = 0.886331885090318;
-		x[1] = -0.232843818639906;
-        x[2] = -0.323199196825617;
-        x[3] = -3.489197236357714e-2;
-        x[4] = 4.887528446948729e-2;
-        x[5] = -3.647043214012526e-2;
-        x[6] = -1.469883220237891e-2;
-		x[7] = 0.193617319914406;
-		x[8] = 2.769304291725437e-2;
-        x[9] = -6.427471729128760e-2;
-        x[10] = 8.322771108406339e-2;
-        x[11] = -2.796801672665753e-2;
-		x[12] = 2.223873145766116e-2;
-		x[13] = 0.402761078340053 / D2PI;
-        x[14] = 0.569791476352286 / D2PI;
-		x[15] = -1.150785849667806e-2 / D2PI;
-        x[16] = 0.387866772588831;
-		// epsi=0.00065
-		x[0] = 0.886329832019311;
-		x[1] = -0.232846027567215;
-        x[2] = -0.323202727185663;
-        x[3] = -3.489300540498072e-2;
-        x[4] = 4.887568994383828e-2;
-        x[5] = -3.647082370879217e-2;
-        x[6] = -1.469883504438131e-2;
-		x[7] = 0.193617559195909;
-		x[8] = 2.769202524818386e-2;
-        x[9] = -6.427578484627385e-2;
-        x[10] = 8.322784992898068e-2;
-        x[11] = -2.796800324263587e-2;
-		x[12] = 2.223856139577682e-2;
-        // x[12] = 2.223856139577682e-2 * rmin;
-		x[13] = 0.402765255495293 / D2PI;
-        x[14] = 0.569788871739337 / D2PI;
-		x[15] = -1.150816805088274e-2 / D2PI;
-        x[16] = 0.387866422911783;
-		// x[0] = sqrt(1 - V_Dot(&x[1], &x[1], 12));
-		// epsi=1
-		x[0] = 0.886333130405504;
-		x[1]=-0.232842469404745;
-        x[2]=-0.323197051913700;
-        x[3]=-3.489133486186371e-2;
-        x[4]=4.887503662665854e-2;
-        x[5]=-3.647019429050564e-2;
-        x[6]=-1.469883048680919e-2;
-		x[7]=0.193617188269731;
-        x[8]=2.769367284791758e-2; 
-        x[9]=-6.427407150054688e-2;
-        x[10]=8.322763303570774e-2;
-        x[11]=-2.796803108363203e-2;
-		x[12]=2.223883626551981e-2;
-        x[13]=0.402758448508058;
-        x[14]=0.569793119253077;
-        x[15]=-1.150766049666990e-2;
-        x[16]=0.387866988865808;
-
-
-		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 20, 2000); // info-hybrd1()的输出标志
-		// std::cout << n << std::endl;
+		*/
+		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
+		// std::cout << enorm(n,fvec) << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 		{
 			sfpara[15]=1.0;
@@ -302,5 +317,6 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		}
 		num++;
 	}
+	std::cout << num << std::endl;
 	return flag;
 }
