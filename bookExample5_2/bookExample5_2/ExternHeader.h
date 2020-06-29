@@ -8,5 +8,6 @@
 #include "Tools\RungeKutta.h"
 #include "Tools\VecMat.h"
 #include "Tools\ODE45.h"
+#include "rk4.h"
 
 #endif

@@ -58,8 +58,8 @@ int main()
 	
 	// 间接法求解引力辅助
 	// 求解算法的一些参数设置
-	// double epsi = 1.2e-5; // 同伦参数设置为1.0
-	int MaxGuessNum = 1000;//设置最大随机猜测次数
+	double epsi = 1.0; // 同伦参数设置为1.0
+	int MaxGuessNum = 100;//设置最大随机猜测次数
 	srand( (unsigned)time( NULL ) );//设定随机数种子，若没有此设置，每次产生一样的随机数
 	// 求解
 	double Out[18] = {0.0}; // 输出计算结果，0-剩余质量，1~17-17个需要打靶的协态初值
@@ -73,10 +73,9 @@ int main()
 		printf("%.6e,\n", Out[j]);
 	*/
 	// flag = GA_FOP(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars, PSO_t);
-	// flag = GA_FOP_2(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars, PSO_t);
 	// flag = change_epsi(Out, rv0, rv1, m0, tof, MaxGuessNum, rv_mars, PSO_t);
-	flag = GA_FOP_type1(Out, rv0, rv1, m0, tof, MaxGuessNum, rv_mars, PSO_t);
-	
+	// flag = GA_FOP_type1(Out, rv0, rv1, m0, tof, MaxGuessNum, rv_mars, PSO_t);
+	flag = GA_FOP_type2(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_mars, PSO_t);
 
 	stop = clock();
 	printf("计算用时为：%.3fs\n", (double)(stop-start)/CLOCKS_PER_SEC);

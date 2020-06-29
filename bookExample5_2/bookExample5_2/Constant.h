@@ -35,4 +35,6 @@ const double EPSILON = 1.0e-14;//通用的精度要求
 const double rpp = 3389.9e3/LUnit; // 火星半径
 const double rmin = 3889.9e3/LUnit; // 最小甩摆半径
 const double mpp = 42828.3e9/mu; // 火星引力系数
+
+const double STEP = 1.0e-3;
 #endif

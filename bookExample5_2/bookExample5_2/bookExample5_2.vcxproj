@@ -78,6 +78,7 @@
   <ItemGroup>
     <ClCompile Include="GA_FOP.cpp" />
     <ClCompile Include="GA_PSO.cpp" />
+    <ClCompile Include="integrate.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MinPack\chkder.c" />
     <ClCompile Include="MinPack\covar.c" />
@@ -104,6 +105,7 @@
     <ClCompile Include="MinPack\r1mpyq.c" />
     <ClCompile Include="MinPack\r1updt.c" />
     <ClCompile Include="MinPack\rwupdt.c" />
+    <ClCompile Include="rk4.cpp" />
     <ClCompile Include="Tools\Lambert.cpp" />
     <ClCompile Include="Tools\ODE45.cpp" />
     <ClCompile Include="Tools\OrbitFun.cpp" />
@@ -116,8 +118,10 @@
     <ClInclude Include="ExternHeader.h" />
     <ClInclude Include="GA_FOP.h" />
     <ClInclude Include="GA_PSO.h" />
+    <ClInclude Include="integrate.h" />
     <ClInclude Include="MinPack\cminpack.h" />
     <ClInclude Include="MinPack\cminpackP.h" />
+    <ClInclude Include="rk4.h" />
     <ClInclude Include="Tools\ODE45.h" />
     <ClInclude Include="Tools\OrbitFun.h" />
     <ClInclude Include="Tools\OrbitMath.h" />

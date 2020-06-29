@@ -123,6 +123,12 @@
     <ClCompile Include="GA_FOP.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="rk4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="integrate.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constant.h">
@@ -159,6 +165,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="GA_FOP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="rk4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="integrate.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

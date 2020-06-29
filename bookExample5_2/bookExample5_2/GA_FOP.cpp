@@ -1,5 +1,6 @@
 #include "ExternHeader.h"
 #include "GA_FOP.h"
+#include "integrate.h"
 
 // 对数同伦
 // 根据14个积分变量x，计算其对应的导数dx
@@ -203,7 +204,7 @@ double GA_Hamilton_type2(const double* x, double lam0, double epsi)
 
 	double H = 0.0;
 	H = V_Dot(costate, dx, 7);
-	H = H + (lam0*TmaxNU/Ispg0NU*( u-epsi*log(u*(1.0-u)) ));
+	H = H + lam0*TmaxNU/Ispg0NU*(u - epsi*u*(1.0 - u));
 	return H;
 }
 
@@ -448,6 +449,110 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 	for (int i=0;i<6;++i)
 		fvec[i] = x0[i] - rvf[i];
 	fvec[6] = x0[13];
+	fvec[16] = enorm(13, x) - 1.0;
+
+	if(outflag>0)
+	{
+		fvec[0]=x0[6];
+	}
+	// fclose(fid1);
+	// fclose(fid2);
+	return 0;
+}
+
+int GA_fvec_type2(int n, const double *x, double *fvec, int iflag, const double* sfpara)
+{
+	if(iflag==0)
+	{
+		return 0;
+	}
+	
+	double x0[14], xf[14], rvf[6];
+	V_Copy(x0, sfpara, 7);
+	V_Copy(rvf, &sfpara[7], 6);
+	double tf = sfpara[13];
+	double epsi = sfpara[14];
+	int outflag = NINT(sfpara[15]);
+	// 获取MJD_MARS时刻火星位置
+	double rv_mars[6];
+	V_Copy(rv_mars, &sfpara[16], 6);
+
+	double lam0 = x[0];
+	V_Copy(&x0[7], &x[1], 7);
+	double chi[4], kappa, dvg[3], tm;
+	V_Copy(chi, &x[8], 4);
+	kappa = x[12];
+	V_Copy(dvg, &x[13], 3);
+	tm = x[16];
+	
+	bi_integrate(x0, 0.0, tm*TOF*86400/TUnit, STEP, xf, 14, epsi, lam0);
+
+	int flag;
+	// 计算一部分偏差
+	// 引力辅助位置约束,7-9
+	double rv_tm[6];
+	rv02rvf(flag, rv_tm, rv_mars, MJD_MARS*86400/TUnit, (MJD0+tm*TOF)*86400/TUnit, muNU);
+	for (int i=0;i<3;++i)
+		fvec[7+i] = xf[i] - rv_tm[i];
+	// normvinfin==normvinfout,10
+	double vinfin[3], vinfout[3], normvinfin, normvinfout, unit_in[3], unit_out[3];
+	V_Minus(vinfin, &xf[3], &rv_tm[3], 3);
+	V_Add(vinfout, vinfin, dvg, 3);
+	normvinfin = V_Norm2(vinfin, 3);
+	normvinfout = V_Norm2(vinfout, 3);
+	V_Divid(unit_in, vinfin, normvinfin, 3);
+	V_Divid(unit_out, vinfout, normvinfout, 3);
+	fvec[10] = normvinfin - normvinfout;
+	// 互补松弛条件,11
+	double theta = acos(V_Dot(unit_in, unit_out, 3));
+	double rp = mpp/(normvinfin*normvinfout) * (1/sin(theta/2) - 1)/rmin;
+	fvec[11] = kappa*(1 - rp);
+	// fvec[11] = 1 - rp/rmin;
+	// fvec[11] = rmin - rp;
+	// fvec[11] = rp - rmin;
+
+	double A[3], B[3], C[3], temp, c;
+	temp = 1/( 4*sin(theta/2)*sin(theta/2) * (1-sin(theta/2)) );
+	for (int i=0;i<3;++i)
+	{
+		A[i] = rp/normvinfin*(temp*(unit_out[i] - cos(theta)*unit_in[i]) - unit_in[i]);
+		B[i] = rp/normvinfout*(temp*(unit_in[i] - cos(theta)*unit_out[i]) - unit_out[i]);
+		C[i] = rp*( -temp*(1/normvinfout*(unit_in[i] - cos(theta)*unit_out[i]) + 1/normvinfin*(unit_out[i] - cos(theta)*unit_in[i])) + unit_out[i]/normvinfout + unit_in[i]/normvinfin );
+	}
+	double am[3];
+	double r_tm = V_Norm2(rv_tm, 3);
+	for (int i=0;i<3;++i)
+		am[i] = -muNU/(r_tm*r_tm*r_tm)*rv_tm[i];
+	c = V_Dot(C, am, 3);
+
+	// tm-时刻速度协态,12-14
+	for (int i=0;i<3;++i)
+		fvec[12+i] = xf[10+i] - chi[3]*unit_in[i] + kappa*A[i];
+
+	V_Copy(x0, xf, 14);
+	double H1 =  GA_Hamilton_type2(x0, lam0, epsi);
+	// 计算新的状态变量和协态变量
+	for (int i=0;i<3;++i)
+	{
+		x0[3+i] = x0[3+i] + dvg[i]; // 速度
+		x0[7+i] = x0[7+i] - chi[i]; // 位置协态
+		x0[10+i] = chi[3]*unit_out[i] + kappa*B[i]; // 速度协态
+	}
+	double H2 = GA_Hamilton_type2(x0, lam0, epsi);
+	// 静态条件偏差,15
+	double tempu[3];
+	V_Minus(tempu, unit_out, unit_in, 3);
+	fvec[15] = H1 - H2 - V_Dot(chi, &rv_tm[3], 3) + chi[3]*V_Dot(tempu, am, 3) - kappa*c;
+
+
+	// 第二阶段的积分
+	// flag = ode45(GA_derivative, x0, dfpara,  tm*TOF*86400/TUnit,  tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	// flag = ode45(GA_derivative, x0, dfpara, tm*TOF*86400/TUnit, tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	bi_integrate(x0, tm*TOF*86400/TUnit, tf, STEP, xf, 14, epsi, lam0);
+
+	for (int i=0;i<6;++i)
+		fvec[i] = xf[i] - rvf[i];
+	fvec[6] = xf[13];
 	fvec[16] = enorm(13, x) - 1.0;
 
 	if(outflag>0)
@@ -791,6 +896,85 @@ int GA_FOP_type1(double* Out, const double* rv0, const double* rv1, double m0, d
 	else
 		printf("求解失败%d\n",flag);
 
+	return flag;
+}
+
+int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
+{
+	double sfpara[22] = {0.0};
+	V_Copy(sfpara, rv0, 6);
+	sfpara[6] = m0;
+	V_Copy(&sfpara[7], rv1, 6);
+	sfpara[13] = tof;
+	sfpara[14] = epsi;
+	sfpara[15] = 0.0;
+	V_Copy(&sfpara[16], rv_middle, 6);
+
+	
+	int info, flag = 0;
+	const int n = 17;
+	double x[17] = {0.0}, fvec[17] = {0.0}, wa[600] = {0.0}; // wa的维数至少是544
+	double guessArray[16] = {0.0};
+	double xtol = 1.0e-8;
+	
+	int num = 0;
+	int j;
+	// double amp, phi, delta;
+	while (num<MaxGuessNum)
+	{
+		for (j=0; j<16; ++j)
+			guessArray[j] = (double)rand()/RAND_MAX;
+		guess2lam(guessArray, x);
+		for (j=0;j<17;++j)
+			printf("%16.6e%s%\n",x[j],",");
+		printf("\n");
+
+		/*
+		// 第一组计算结果，不等式约束乘子为零，剩余质量为18212.165
+		x[0] = 5.059988e-1;
+		x[1] = -3.510439e-1;
+		x[2] = -4.324779e-1;
+		x[3] = 1.426043e-2;
+		x[4] = 5.198075e-1;
+		x[5] = -3.620174e-1;
+		x[6] = -5.811510e-2;
+		x[7] = 1.044576e-1;
+		x[8] = 8.770364e-2;
+		x[9] = 3.765305e-2;
+		x[10] = 4.969229e-2;
+		x[11] = -7.980374e-2;
+		x[12] = 9.987540e-16;
+		x[13] = 3.488134e-1;
+		x[14] = 1.081177e-1;
+		x[15] = -9.460807e-3;
+		x[16] = 4.089086e-1;
+		*/
+
+
+		info = hybrd1(GA_fvec_type2, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
+		// std::cout << enorm(n,fvec) << std::endl;
+		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
+		{
+			sfpara[15]=1.0;
+			int _j = GA_fvec_type2(n, x, fvec, 1, sfpara); // 利用同伦计算得到的协态初值，进行最后一次的积分求解（直接用这个较小的同伦参数，求解近似邦邦控制的结果）
+			if(fvec[0]>Out[0]) // 剩余质量为正，且满足打靶精度要求，停止
+			{
+				flag=1;
+				Out[0]=fvec[0];
+				V_Copy(&Out[1], x, 17);
+				break;
+			}
+			sfpara[15]=0.0;
+		}
+		num++;
+	}
+	std::cout << num << std::endl;
+	printf("求解成功%d\n",flag);
+	printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+	// printf("lamda0为:%.6e\n", Out[1]);
+	printf("17个打靶变量值为:\n");
+	for (int j=1; j<=17; j++)
+		printf("%.6e,\n", Out[j]);
 	return flag;
 }
 
