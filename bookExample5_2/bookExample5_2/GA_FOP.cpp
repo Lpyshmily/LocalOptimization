@@ -628,6 +628,7 @@ void guess2lam(const double* guessValue, double* lamValue)
 	lamValue[16] = (2.0 + guessValue[15])*365.25/2201;
 }
 
+// 对数同伦 随机猜测
 int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[22] = {0.0};
@@ -765,6 +766,7 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 	return flag;
 }
 
+// 对数同伦 用上一次计算结果作为猜测初值
 int GA_FOP_2(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[22] = {0.0};
@@ -834,6 +836,7 @@ int GA_FOP_2(double* Out, const double* rv0, const double* rv1, double m0, doubl
 	return flag;
 }
 
+// bang-bang 用对数同伦结果作为初值
 int GA_FOP_type1(double* Out, const double* rv0, const double* rv1, double m0, double tof, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[21] = {0.0};
@@ -899,6 +902,7 @@ int GA_FOP_type1(double* Out, const double* rv0, const double* rv1, double m0, d
 	return flag;
 }
 
+// 二次同伦 随机猜测
 int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
 	double sfpara[22] = {0.0};
@@ -948,8 +952,64 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 1.081177e-1;
 		x[15] = -9.460807e-3;
 		x[16] = 4.089086e-1;
+		
+		// 第二组计算结果，剩余质量为18173.499
+		x[0] = 6.137291e-1;
+		x[1] = -2.792804e-1;
+		x[2] = -4.608278e-1;
+		x[3] = -5.363877e-2;
+		x[4] = 3.636849e-1;
+		x[5] = -3.348964e-1;
+		x[6] = -5.564393e-2;
+		x[7] = 1.768778e-1;
+		x[8] = -7.358387e-3;
+		x[9] = -1.036135e-1;
+		x[10] = 6.240425e-2;
+		x[11] = -1.905573e-1;
+		x[12] = 1.729442e-2;
+		x[13] = 7.823747e-2;
+		x[14] = 7.901755e-2;
+		x[15] = -5.190058e-3;
+		x[16] = 3.751106e-1;
+		
+		// 第三组计算结果，剩余质量为17031.677
+		x[0] = 2.214995e-1;
+		x[1] = 2.132710e-1;
+		x[2] = 5.669776e-1;
+		x[3] = 2.738201e-2;
+		x[4] = -4.769494e-1;
+		x[5] = 5.622211e-1;
+		x[6] = -3.827401e-2;
+		x[7] = 1.393004e-1;
+		x[8] = -1.067973e-1;
+		x[9] = -6.298917e-3;
+		x[10] = 3.868794e-2;
+		x[11] = -7.713973e-2;
+		x[12] = -3.375318e-14;
+		x[13] = 9.186601e-2;
+		x[14] = 3.508144e-1;
+		x[15] = 1.159120e-2;
+		x[16] = 4.233791e-1;
+		
+		// 第四组计算结果，剩余质量为18277.740
+		x[0] = 4.280059e-1;
+		x[1] = -3.916981e-1;
+		x[2] = -5.170270e-1;
+		x[3] = -5.082789e-2;
+		x[4] = 4.775190e-1;
+		x[5] = -3.586965e-1;
+		x[6] = -2.796766e-2;
+		x[7] = 1.137957e-1;
+		x[8] = -5.637174e-2;
+		x[9] = -7.778244e-2;
+		x[10] = 4.638942e-2;
+		x[11] = -1.080929e-1;
+		x[12] = -7.160789e-15;
+		x[13] = 1.256892e-1;
+		x[14] = 2.341013e-1;
+		x[15] = -1.450502e-2;
+		x[16] = 3.667574e-1;
 		*/
-
 
 		info = hybrd1(GA_fvec_type2, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
 		// std::cout << enorm(n,fvec) << std::endl;
@@ -975,6 +1035,75 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 	printf("17个打靶变量值为:\n");
 	for (int j=1; j<=17; j++)
 		printf("%.6e,\n", Out[j]);
+	return flag;
+}
+
+int GA_FOP_type2_process(double* Out, const double* rv0, const double* rv1, double m0, double tof, double epsi, int MaxGuessNum, const double* rv_middle, double PSO_t)
+{
+	double sfpara[22] = {0.0};
+	V_Copy(sfpara, rv0, 6);
+	sfpara[6] = m0;
+	V_Copy(&sfpara[7], rv1, 6);
+	sfpara[13] = tof;
+	sfpara[14] = epsi;
+	sfpara[15] = 0.0;
+	V_Copy(&sfpara[16], rv_middle, 6);
+
+	
+	int info, flag = 0;
+	const int n = 17;
+	double x[17] = {0.0}, fvec[17] = {0.0}, wa[600] = {0.0}; // wa的维数至少是544
+	double guessArray[16] = {0.0};
+	double xtol = 1.0e-8;
+	
+	// epsi=1.0时的结果
+	x[0] = 6.137291e-1;
+	x[1] = -2.792804e-1;
+	x[2] = -4.608278e-1;
+	x[3] = -5.363877e-2;
+	x[4] = 3.636849e-1;
+	x[5] = -3.348964e-1;
+	x[6] = -5.564393e-2;
+	x[7] = 1.768778e-1;
+	x[8] = -7.358387e-3;
+	x[9] = -1.036135e-1;
+	x[10] = 6.240425e-2;
+	x[11] = -1.905573e-1;
+	x[12] = 1.729442e-2;
+	x[13] = 7.823747e-2;
+	x[14] = 7.901755e-2;
+	x[15] = -5.190058e-3;
+	x[16] = 3.751106e-1;
+	
+	// 把上一个结果作为初值
+	if (Out[0]>1e-8)
+		V_Copy(x, &Out[1], 17);
+
+	printf("当前同伦参数为:%f\n", epsi);
+	info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
+	if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
+	{
+		sfpara[15]=1.0;
+		int _j = GA_fvec(n, x, fvec, 1, sfpara); // 利用同伦计算得到的协态初值，进行最后一次的积分求解（直接用这个较小的同伦参数，求解近似邦邦控制的结果）
+		if(fvec[0]>Out[0]) // 剩余质量为正，且满足打靶精度要求，停止
+		{
+			flag=1;
+			Out[0]=fvec[0];
+			V_Copy(&Out[1], x, 17);
+		}
+		sfpara[15]=0.0;
+		printf("求解成功%d\n",flag);
+		printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+		// printf("lamda0为:%.6e\n", Out[1]);
+		
+		printf("17个打靶变量值为:\n");
+		for (int j=1; j<=17; j++)
+			printf("%.6e,\n", Out[j]);
+		
+	}
+	else
+		printf("求解失败%d\n",flag);
+
 	return flag;
 }
 
