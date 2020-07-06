@@ -1,16 +1,21 @@
-﻿生成启动时间为 2020/6/22 20:45:35。
+﻿生成启动时间为 2020/7/6 11:29:58。
      1>项目“D:\Programming\Github\LocalOptimization\bookExample5_2\bookExample5_2\bookExample5_2.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
-         D:\Software\VS2012\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt GA_FOP.cpp GA_PSO.cpp Tools\Lambert.cpp Tools\OrbitFun.cpp Tools\RungeKutta.CPP main.cpp
+         D:\Software\VS2012\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt GA_FOP.cpp GA_PSO.cpp integrate.cpp main.cpp rk4.cpp Tools\Lambert.cpp Tools\OrbitFun.cpp Tools\RungeKutta.CPP
          GA_FOP.cpp
          GA_PSO.cpp
+         integrate.cpp
+     1>integrate.cpp(135): warning C4101: “i”: 未引用的局部变量
+     1>integrate.cpp(306): warning C4101: “i”: 未引用的局部变量
+         main.cpp
+         rk4.cpp
          Lambert.cpp
          OrbitFun.cpp
          RungeKutta.CPP
-         main.cpp
        Link:
          D:\Software\VS2012\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Programming\Github\LocalOptimization\bookExample5_2\Release\bookExample5_2.lib" /MACHINE:X86 /SAFESEH Release\GA_FOP.obj
          Release\GA_PSO.obj
+         Release\integrate.obj
          Release\main.obj
          Release\chkder.obj
          Release\covar.obj
@@ -37,6 +42,7 @@
          Release\r1mpyq.obj
          Release\r1updt.obj
          Release\rwupdt.obj
+         Release\rk4.obj
          Release\Lambert.obj
          Release\ODE45.obj
          Release\OrbitFun.obj
@@ -50,4 +56,4 @@
 
 生成成功。
 
-已用时间 00:00:03.04
+已用时间 00:00:03.43

@@ -41,7 +41,6 @@ int GA_derivative(double t, const double* x, double* dx, const double* dfpara)
 
 // bang-bang控制
 // 根据14个积分变量x，计算其对应的导数dx
-// dfpara:[0],lam0
 int GA_derivative_type1(double t, const double* x, double* dx, const double* dfpara)
 {
 	int i;
@@ -149,7 +148,7 @@ double GA_Hamilton(const double* x, double lam0, double epsi)
 
 // bang-bang控制
 // 计算哈密顿函数的值
-double GA_Hamilton_type1(const double* x, double lam0)
+double GA_Hamilton_type1(const double* x, double lam0, double epsi)
 {
 	double m = x[6];
 	double costate[7] = {0.0}, alpha[3] = {0.0};
@@ -161,14 +160,16 @@ double GA_Hamilton_type1(const double* x, double lam0)
 		alpha[i] = -costate[i+3]/norm_lambdaV;
 	double rou, u;
 	rou = 1.0 - (Ispg0NU*norm_lambdaV/m + costate[6])/lam0; // 开关函数
-	if (rou > 0)
+	if (rou > 0.0)
 		u = 0.0;
 	else
 		u = 1.0;
 	// 计算状态变量的导数
-	double dfpara = lam0;
+	double dfpara[2];
+	dfpara[0] = epsi;
+	dfpara[1] = lam0;
 	double dx[14] = {0.0};
-	int flag = GA_derivative_type1(0, x, dx, &dfpara);
+	int flag = GA_derivative_type1(0, x, dx, dfpara);
 
 	double H = 0.0;
 	H = V_Dot(costate, dx, 7);
@@ -338,12 +339,6 @@ int GA_fvec(int n, const double *x, double *fvec, int iflag, const double* sfpar
 	return 0;
 }
 
-//sfpara
-//[0-6],初始位置速度和质量
-//[7-12],末端位置速度
-//[13],转移时间
-//[14],输出信息标识，0表示不输出，1表示输出
-//[15-20],火星在MJD_MARS时刻的位置速度
 int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double* sfpara)
 {
 	if(iflag==0)
@@ -351,14 +346,16 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 		return 0;
 	}
 	
-	double x0[14], rvf[6];
+	double x0[14], xf[14], rvf[6];
 	V_Copy(x0, sfpara, 7);
 	V_Copy(rvf, &sfpara[7], 6);
 	double tf = sfpara[13];
-	int outflag = NINT(sfpara[14]);
+	double epsi = sfpara[14];
+	epsi = 0.0;
+	int outflag = NINT(sfpara[15]);
 	// 获取MJD_MARS时刻火星位置
 	double rv_mars[6];
-	V_Copy(rv_mars, &sfpara[15], 6);
+	V_Copy(rv_mars, &sfpara[16], 6);
 
 	double lam0 = x[0];
 	V_Copy(&x0[7], &x[1], 7);
@@ -368,33 +365,18 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 	V_Copy(dvg, &x[13], 3);
 	tm = x[16];
 	
+	bang_integrate(x0, 0.0, tm*TOF*86400/TUnit, STEP, xf, 14, epsi, lam0);
 
-
-
-	double dfpara = lam0;
-
-	double AbsTol[14] = {0.0};
-	for(int i=0;i<14;i++)
-		AbsTol[i]=1e-12;
-	double RelTol=1e-12;
-
-	// FILE *fid = NULL;//fopen("temp.txt","w");//如果设定有效文件路径，最后需要关闭文件
-	// FILE *fid1 = fopen("temp1.txt", "w");
-	// FILE *fid2 = fopen("temp2.txt", "w");
-	FILE *fid1 = NULL;
-	FILE *fid2 = NULL;
-	int flag,NumPoint;
-	double work[140]={0.0};
-	flag = ode45(GA_derivative_type1, x0, &dfpara,  0.0, tm*TOF*86400/TUnit, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid1);
+	int flag;
 	// 计算一部分偏差
 	// 引力辅助位置约束,7-9
 	double rv_tm[6];
 	rv02rvf(flag, rv_tm, rv_mars, MJD_MARS*86400/TUnit, (MJD0+tm*TOF)*86400/TUnit, muNU);
 	for (int i=0;i<3;++i)
-		fvec[7+i] = x0[i] - rv_tm[i];
+		fvec[7+i] = xf[i] - rv_tm[i];
 	// normvinfin==normvinfout,10
 	double vinfin[3], vinfout[3], normvinfin, normvinfout, unit_in[3], unit_out[3];
-	V_Minus(vinfin, &x0[3], &rv_tm[3], 3);
+	V_Minus(vinfin, &xf[3], &rv_tm[3], 3);
 	V_Add(vinfout, vinfin, dvg, 3);
 	normvinfin = V_Norm2(vinfin, 3);
 	normvinfout = V_Norm2(vinfout, 3);
@@ -425,9 +407,10 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 
 	// tm-时刻速度协态,12-14
 	for (int i=0;i<3;++i)
-		fvec[12+i] = x0[10+i] - chi[3]*unit_in[i] + kappa*A[i];
+		fvec[12+i] = xf[10+i] - chi[3]*unit_in[i] + kappa*A[i];
 
-	double H1 =  GA_Hamilton_type1(x0, lam0);
+	V_Copy(x0, xf, 14);
+	double H1 =  GA_Hamilton_type1(x0, lam0, epsi);
 	// 计算新的状态变量和协态变量
 	for (int i=0;i<3;++i)
 	{
@@ -435,7 +418,7 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 		x0[7+i] = x0[7+i] - chi[i]; // 位置协态
 		x0[10+i] = chi[3]*unit_out[i] + kappa*B[i]; // 速度协态
 	}
-	double H2 = GA_Hamilton_type1(x0, lam0);
+	double H2 = GA_Hamilton_type1(x0, lam0, epsi);
 	// 静态条件偏差,15
 	double tempu[3];
 	V_Minus(tempu, unit_out, unit_in, 3);
@@ -444,16 +427,17 @@ int GA_fvec_type1(int n, const double *x, double *fvec, int iflag, const double*
 
 	// 第二阶段的积分
 	// flag = ode45(GA_derivative, x0, dfpara,  tm*TOF*86400/TUnit,  tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
-	flag = ode45(GA_derivative_type1, x0, &dfpara, tm*TOF*86400/TUnit, tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	// flag = ode45(GA_derivative, x0, dfpara, tm*TOF*86400/TUnit, tf, 14, NumPoint, work, AbsTol, RelTol, 0, -1, -1, fid2);
+	bang_integrate(x0, tm*TOF*86400/TUnit, tf, STEP, xf, 14, epsi, lam0);
 
 	for (int i=0;i<6;++i)
-		fvec[i] = x0[i] - rvf[i];
-	fvec[6] = x0[13];
+		fvec[i] = xf[i] - rvf[i];
+	fvec[6] = xf[13];
 	fvec[16] = enorm(13, x) - 1.0;
 
 	if(outflag>0)
 	{
-		fvec[0]=x0[6];
+		fvec[0]=xf[6];
 	}
 	// fclose(fid1);
 	// fclose(fid2);
@@ -557,7 +541,7 @@ int GA_fvec_type2(int n, const double *x, double *fvec, int iflag, const double*
 
 	if(outflag>0)
 	{
-		fvec[0]=x0[6];
+		fvec[0]=xf[6];
 	}
 	// fclose(fid1);
 	// fclose(fid2);
@@ -655,9 +639,12 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		for (j=0; j<16; ++j)
 			guessArray[j] = (double)rand()/RAND_MAX;
 		guess2lam(guessArray, x);
+		/*
 		for (j=0;j<17;++j)
 			printf("%16.6e%s%\n",x[j],",");
 		printf("\n");
+		*/
+
 		/*
 		// 第一个结果，剩余质量为16033.297
 		// 不满足不等式约束
@@ -678,7 +665,7 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[14] = 1.273974e-1;
 		x[15] = 2.647024e-3;
 		x[16] = 4.122586e-1;
-		*/
+		
 
 		// 第二个结果，剩余质量为15360.170
 		x[0] = 1.847764e-1;
@@ -699,7 +686,7 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[15] = -9.730948e-3;
 		x[16] = 3.627381e-1;
 
-		/*
+		
 		// epsi = 0.995
 		x[0] = 1.854903e-1;
 		x[1] = -3.644848e-1;
@@ -718,25 +705,44 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 		x[14] = 5.920827e-2;
 		x[15] = -9.728563e-3;
 		x[16] = 3.627526e-1;
-		
-		// epsi=1.2e-5时的结果
-		x[0] = 8.152167e-1;
-		x[1] = -2.143450e-1;
-		x[2] = -2.975502e-1;
-		x[3] = -3.214474e-2;
-		x[4] = 2.826663e-1;
-		x[5] = -2.109592e-1;
-		x[6] = -8.493628e-2;
-		x[7] = 1.781236e-1;
-		x[8] = 2.541862e-2;
-		x[9] = -5.919471e-2;
-		x[10] = 7.655084e-2;
-		x[11] = -1.616604e-1;
-		x[12] = 2.044634e-2;
-		x[13] = 6.413660e-2;
-		x[14] = 9.066606e-2;
-		x[15] = -1.837024e-3;
-		x[16] = 3.878463e-1;
+		*/
+		// epsi=1.2e-5时的结果,16021.554
+		x[0] = 8.152167179245462e-001;
+		x[1] = -2.143450414873604e-001;
+		x[2] = -2.975501858963105e-001;
+		x[3] = -3.214474440438555e-002;
+		x[4] = 2.826663298308946e-001;
+		x[5] = -2.109591915546727e-001;
+		x[6] = -8.493627886200947e-002;
+		x[7] = 1.781235703614778e-001;
+		x[8] = 2.541862128708982e-002;
+		x[9] = -5.919471028395332e-002;
+		x[10] = 7.655083822488865e-002;
+		x[11] = -1.616604224358071e-001;
+		x[12] = 2.044634272557275e-002;
+		x[13] = 6.413659577823913e-002;
+		x[14] = 9.066606371583727e-002;
+		x[15] = -1.837023674860771e-003;
+		x[16] = 3.878463163809591e-001;
+		/*
+		// epsi=2.3437500e-8,16021.641737147094000,fail
+		x[0] = 8.1541730965308412e-001;
+		x[1] = -2.1421302795905156e-001;
+		x[2] = -2.9733850261287192e-001;
+		x[3] = -3.2099774206881676e-002;
+		x[4] = 2.825155619269602e-001;
+		x[5] = -2.1081110962928706e-001;
+		x[6] = -8.4964463129163184e-002;
+		x[7] = 1.7812588504346041e-001;
+		x[8] = 2.5477784651429049e-002;
+		x[9] = -5.9131632797361514e-002;
+		x[10] = 7.6568560564841071e-002;
+		x[11] = -1.6166523785486842e-001;
+		x[12] = 2.0459482727909314e-002;
+		x[13] = 6.4102281588356805e-002;
+		x[14] = 9.0687059332444989e-002;
+		x[15] = -1.8315469802102997e-003;
+		x[16] = 3.8786694703116403e-001;
 		*/
 
 		info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
@@ -758,11 +764,11 @@ int GA_FOP(double* Out, const double* rv0, const double* rv1, double m0, double 
 	}
 	std::cout << num << std::endl;
 	printf("求解成功%d\n",flag);
-	printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+	printf("剩余质量为:%.15fkg\n", Out[0]*MUnit);
 	// printf("lamda0为:%.6e\n", Out[1]);
 	printf("17个打靶变量值为:\n");
 	for (int j=1; j<=17; j++)
-		printf("%.6e,\n", Out[j]);
+		printf("%.15e,\n", Out[j]);
 	return flag;
 }
 
@@ -808,7 +814,7 @@ int GA_FOP_2(double* Out, const double* rv0, const double* rv1, double m0, doubl
 	if (Out[0]>1e-8)
 		V_Copy(x, &Out[1], 17);
 
-	printf("当前同伦参数为:%f\n", epsi);
+	printf("当前同伦参数为:%.15e\n", epsi);
 	info = hybrd1(GA_fvec, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
 	if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 	{
@@ -822,12 +828,12 @@ int GA_FOP_2(double* Out, const double* rv0, const double* rv1, double m0, doubl
 		}
 		sfpara[15]=0.0;
 		printf("求解成功%d\n",flag);
-		printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+		printf("剩余质量为:%.15fkg\n", Out[0]*MUnit);
 		// printf("lamda0为:%.6e\n", Out[1]);
 		
 		printf("17个打靶变量值为:\n");
 		for (int j=1; j<=17; j++)
-			printf("%.6e,\n", Out[j]);
+			printf("%.20e,\n", Out[j]);
 		
 	}
 	else
@@ -839,13 +845,14 @@ int GA_FOP_2(double* Out, const double* rv0, const double* rv1, double m0, doubl
 // bang-bang 用对数同伦结果作为初值
 int GA_FOP_type1(double* Out, const double* rv0, const double* rv1, double m0, double tof, int MaxGuessNum, const double* rv_middle, double PSO_t)
 {
-	double sfpara[21] = {0.0};
+	double sfpara[22] = {0.0};
 	V_Copy(sfpara, rv0, 6);
 	sfpara[6] = m0;
 	V_Copy(&sfpara[7], rv1, 6);
 	sfpara[13] = tof;
 	sfpara[14] = 0.0;
-	V_Copy(&sfpara[15], rv_middle, 6);
+	sfpara[15] = 0.0;
+	V_Copy(&sfpara[16], rv_middle, 6);
 
 	
 	int info, flag = 0;
@@ -854,25 +861,24 @@ int GA_FOP_type1(double* Out, const double* rv0, const double* rv1, double m0, d
 	double guessArray[16] = {0.0};
 	double xtol = 1.0e-8;
 	
-	// epsi=1.2e-5时的结果
-	x[0] = 8.152167e-1;
-	x[1] = -2.143450e-1;
-	x[2] = -2.975502e-1;
-	x[3] = -3.214474e-2;
-	x[4] = 2.826663e-1;
-	x[5] = -2.109592e-1;
-	x[6] = -8.493628e-2;
-	x[7] = 1.781236e-1;
-	x[8] = 2.541862e-2;
-	x[9] = -5.919471e-2;
-	x[10] = 7.655084e-2;
-	x[11] = -1.616604e-1;
-	x[12] = 2.044634e-2;
-	x[13] = 6.413660e-2;
-	x[14] = 9.066606e-2;
-	x[15] = -1.837024e-3;
-	x[16] = 3.878463e-1;
-	
+	// 对数同伦 epsi=1.2e-5时的结果
+	x[0] = 8.152167179245462e-001;
+	x[1] = -2.143450414873604e-001;
+	x[2] = -2.975501858963105e-001;
+	x[3] = -3.214474440438555e-002;
+	x[4] = 2.826663298308946e-001;
+	x[5] = -2.109591915546727e-001;
+	x[6] = -8.493627886200947e-002;
+	x[7] = 1.781235703614778e-001;
+	x[8] = 2.541862128708982e-002;
+	x[9] = -5.919471028395332e-002;
+	x[10] = 7.655083822488865e-002;
+	x[11] = -1.616604224358071e-001;
+	x[12] = 2.044634272557275e-002;
+	x[13] = 6.413659577823913e-002;
+	x[14] = 9.066606371583727e-002;
+	x[15] = -1.837023674860771e-003;
+	x[16] = 3.878463163809591e-001;
 
 	printf("bang-bang控制计算结果：\n");
 	info = hybrd1(GA_fvec_type1, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
@@ -934,7 +940,7 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		printf("\n");
 
 		/*
-		// 第一组计算结果，不等式约束乘子为零，剩余质量为18212.165
+		// 第一组计算结果，不等式约束乘子为零，剩余质量为16633.139
 		x[0] = 5.059988e-1;
 		x[1] = -3.510439e-1;
 		x[2] = -4.324779e-1;
@@ -953,7 +959,7 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[15] = -9.460807e-3;
 		x[16] = 4.089086e-1;
 		
-		// 第二组计算结果，剩余质量为18173.499，认为是正确结果
+		// 第二组计算结果，剩余质量为15735.957，认为是正确结果
 		x[0] = 6.137291e-1;
 		x[1] = -2.792804e-1;
 		x[2] = -4.608278e-1;
@@ -972,7 +978,7 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[15] = -5.190058e-3;
 		x[16] = 3.751106e-1;
 		
-		// 第三组计算结果，剩余质量为17031.677
+		// 第三组计算结果，剩余质量为15458.937
 		x[0] = 2.214995e-1;
 		x[1] = 2.132710e-1;
 		x[2] = 5.669776e-1;
@@ -991,7 +997,7 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[15] = 1.159120e-2;
 		x[16] = 4.233791e-1;
 		
-		// 第四组计算结果，剩余质量为18277.740
+		// 第四组计算结果，剩余质量为16287.891
 		x[0] = 4.280059e-1;
 		x[1] = -3.916981e-1;
 		x[2] = -5.170270e-1;
@@ -1009,10 +1015,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 2.341013e-1;
 		x[15] = -1.450502e-2;
 		x[16] = 3.667574e-1;
-		*/
-
 		
-		// epsi=0.085，剩余质量18266.259
+		// epsi=0.085，剩余质量15999.912
 		x[0] = 7.919180e-1;
 		x[1] = -2.276970e-1;
 		x[2] = -3.201659e-1;
@@ -1030,8 +1034,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.779804e-2;
 		x[15] = -2.476456e-3;
 		x[16] = 3.850029e-1;
-
-		// epsi = 0.068,18269.525
+		
+		// epsi = 0.068,16005.793
 		x[0] = 7.965290e-1;
 		x[1] = -2.254639e-1;
 		x[2] = -3.157990e-1;
@@ -1049,8 +1053,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.809942e-2;
 		x[15] = -2.379520e-3;
 		x[16] = 3.854693e-1;
-
-		// epsi = 0.051, 18271.700
+		
+		// epsi = 0.051, 16011.347
 		x[0] = 8.018689e-1;
 		x[1] = -2.225724e-1;
 		x[2] = -3.107233e-1;
@@ -1068,28 +1072,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.855402e-2;
 		x[15] = -2.252143e-3;
 		x[16] = 3.860175e-1;
-
 		
-		// epsi = 0.0445,18271.892,fail
-		x[0] = 8.039778e-1;
-		x[1] = -2.213658e-1;
-		x[2] = -3.086975e-1;
-		x[3] = -3.666336e-2;
-		x[4] = 2.902269e-1;
-		x[5] = -2.184268e-1;
-		x[6] = -8.542414e-2;
-		x[7] = 1.784232e-1;
-		x[8] = 2.078766e-2;
-		x[9] = -6.329318e-2;
-		x[10] = 7.748331e-2;
-		x[11] = -1.614749e-1;
-		x[12] = 1.971082e-2;
-		x[13] = 6.696585e-2;
-		x[14] = 8.880294e-2;
-		x[15] = -2.193896e-3;
-		x[16] = 3.862665e-1;
-
-		// epsi = 0.0485,18271.824
+		// epsi = 0.0485,16012.120
 		x[0] = 8.026757e-1;
 		x[1] = -2.221156e-1;
 		x[2] = -3.099497e-1;
@@ -1107,8 +1091,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.864391e-2;
 		x[15] = -2.230608e-3;
 		x[16] = 3.861101e-1;
-
-		// epsi = 0.0473,18271.862
+		
+		// epsi = 0.0473,16012.486
 		x[0] = 8.030649e-1;
 		x[1] = -2.218931e-1;
 		x[2] = -3.095759e-1;
@@ -1127,7 +1111,7 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[15] = -2.219905e-3;
 		x[16] = 3.861560e-1;
 		
-		// epsi = 0.0459,18271.887
+		// epsi = 0.0459,16012.909
 		x[0] = 8.035205e-1;
 		x[1] = -2.216309e-1;
 		x[2] = -3.091378e-1;
@@ -1145,8 +1129,8 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.874505e-2;
 		x[15] = -2.207090e-3;
 		x[16] = 3.862106e-1;
-
-		// epsi = 0.0443,18271.891
+		
+		// epsi = 0.0443,16013.388
 		x[0] = 8.040432e-1;
 		x[1] = -2.213276e-1;
 		x[2] = -3.086345e-1;
@@ -1164,26 +1148,64 @@ int GA_FOP_type2(double* Out, const double* rv0, const double* rv1, double m0, d
 		x[14] = 8.881141e-2;
 		x[15] = -2.191978e-3;
 		x[16] = 3.862746e-1;
-		/*
-		// epsi = 0.0436,18271.883,fail
-		x[0] = 8.042726e-1;
-		x[1] = -2.211938e-1;
-		x[2] = -3.084134e-1;
-		x[3] = -3.655454e-2;
-		x[4] = 2.900435e-1;
-		x[5] = -2.182360e-1;
-		x[6] = -8.541342e-2;
-		x[7] = 1.784169e-1;
-		x[8] = 2.089857e-2;
-		x[9] = -6.318563e-2;
-		x[10] = 7.745691e-2;
-		x[11] = -1.614485e-1;
-		x[12] = 1.972899e-2;
-		x[13] = 6.690966e-2;
-		x[14] = 8.884148e-2;
-		x[15] = -2.185199e-3;
-		x[16] = 3.863031e-1;
+		
+		// epsi = 0.0436,16013.596
+		x[0] = 8.042725965700290e-001;
+		x[1] = -2.211937537176773e-001;
+		x[2] = -3.084134241041890e-001;
+		x[3] = -3.655454262671428e-002;
+		x[4] = 2.900435398918890e-001;
+		x[5] = -2.182359764224797e-001;
+		x[6] = -8.541341705144076e-002;
+		x[7] = 1.784169164509153e-001;
+		x[8] = 2.089857298400147e-002;
+		x[9] = -6.318563171857791e-002;
+		x[10] = 7.745691426350598e-002;
+		x[11] = -1.614484860170150e-001;
+		x[12] = 1.972898956529453e-002;
+		x[13] = 6.690966138611852e-002;
+		x[14] = 8.884147982213525e-002;
+		x[15] = -2.185199480239959e-003;
+		x[16] = 3.863031369778016e-001;
+		
+		// epsi = 0.0401,16014.620
+		x[0] = 8.054248501109432e-001;
+		x[1] = -2.205131621605458e-001;
+		x[2] = -3.073009940382859e-001;
+		x[3] = -3.611564767208081e-002;
+		x[4] = 2.893190301396931e-001;
+		x[5] = -2.174912851870250e-001;
+		x[6] = -8.536517986960314e-002;
+		x[7] = 1.783898736382844e-001;
+		x[8] = 2.134575909842813e-002;
+		x[9] = -6.276318498478462e-002;
+		x[10] = 7.735028955156803e-002;
+		x[11] = -1.613641434423965e-001;
+		x[12] = 1.980103548141748e-002;
+		x[13] = 6.667519088863626e-002;
+		x[14] = 8.900179100053358e-002;
+		x[15] = -2.149613934468473e-003;
+		x[16] = 3.864512557736997e-001;
 		*/
+		// epsi = 0.0302,16017.362
+		x[0] = 8.087134641697199e-001;
+		x[1] = -2.184904341370915e-001;
+		x[2] = -3.041123392009458e-001;
+		x[3] = -3.471704743361110e-002;
+		x[4] = 2.871824860565886e-001;
+		x[5] = -2.153857839013599e-001;
+		x[6] = -8.515251769732488e-002;
+		x[7] = 1.782852718859805e-001;
+		x[8] = 2.276884626652113e-002;
+		x[9] = -6.152814675477464e-002;
+		x[10] = 7.700384717291900e-002;
+		x[11] = -1.613042751996191e-001;
+		x[12] = 2.001685034740052e-002;
+		x[13] = 6.585171660602766e-002;
+		x[14] = 8.955785178225488e-002;
+		x[15] = -2.029132260449991e-003;
+		x[16] = 3.869258034013191e-001;
+		
 		info = hybrd1(GA_fvec_type2, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
 		// std::cout << enorm(n,fvec) << std::endl;
 		if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
@@ -1249,51 +1271,11 @@ int GA_FOP_type2_process(double* Out, const double* rv0, const double* rv1, doub
 	x[15] = -5.190058e-3;
 	x[16] = 3.751106e-1;
 	
-	/*
-	// epsi=0.085，剩余质量18266.259
-	x[0] = 7.919180e-1;
-	x[1] = -2.276970e-1;
-	x[2] = -3.201659e-1;
-	x[3] = -4.036419e-2;
-	x[4] = 2.969932e-1;
-	x[5] = -2.262774e-1;
-	x[6] = -8.546398e-2;
-	x[7] = 1.785882e-1;
-	x[8] = 1.700684e-2;
-	x[9] = -6.772456e-2;
-	x[10] = 7.835782e-2;
-	x[11] = -1.640158e-1;
-	x[12] = 1.905718e-2;
-	x[13] = 6.840902e-2;
-	x[14] = 8.779804e-2;
-	x[15] = -2.476456e-3;
-	x[16] = 3.850029e-1;
-	
-	// epsi = 0.045,18271.893
-	x[0] = 8.038143e-1;
-	x[1] = -2.214608e-1;
-	x[2] = -3.088550e-1;
-	x[3] = -3.672313e-2;
-	x[4] = 2.903283e-1;
-	x[5] = -2.185327e-1;
-	x[6] = -8.542983e-2;
-	x[7] = 1.784266e-1;
-	x[8] = 2.072673e-2;
-	x[9] = -6.335274e-2;
-	x[10] = 7.749780e-2;
-	x[11] = -1.614904e-1;
-	x[12] = 1.970079e-2;
-	x[13] = 6.699638e-2;
-	x[14] = 8.878198e-2;
-	x[15] = -2.198654e-3;
-	x[16] = 3.862464e-1;
-	*/
-	
 	// 把上一个结果作为初值
 	if (Out[0]>1e-8)
 		V_Copy(x, &Out[1], 17);
 
-	printf("当前同伦参数为:%f\n", epsi);
+	printf("当前同伦参数为:%.15f\n", epsi);
 	info = hybrd1(GA_fvec_type2, n, x, fvec, sfpara, wa, xtol, 5, 2000); // info-hybrd1()的输出标志
 	if(info>0 && enorm(n,fvec)<1e-8 && x[0]>0.0)
 	{
@@ -1307,12 +1289,12 @@ int GA_FOP_type2_process(double* Out, const double* rv0, const double* rv1, doub
 		}
 		sfpara[15]=0.0;
 		printf("求解成功%d\n",flag);
-		printf("剩余质量为:%.3fkg\n", Out[0]*MUnit);
+		printf("剩余质量为:%.15fkg\n", Out[0]*MUnit);
 		// printf("lamda0为:%.6e\n", Out[1]);
 		
 		printf("17个打靶变量值为:\n");
 		for (int j=1; j<=17; j++)
-			printf("%.6e,\n", Out[j]);
+			printf("%.15e,\n", Out[j]);
 		
 	}
 	else
@@ -1338,8 +1320,10 @@ int change_epsi(double* Out, const double* rv0, const double* rv1, double m0, do
 			epsi = epsi - 0.00005;
 		else if (epsi > 0.00011)
 			epsi = epsi - 0.00001;
-		else if (epsi > 0.00001)
+		else if (epsi > 0.000012)
 			epsi = epsi - 0.000001;
+		else if (epsi > 1e-8)
+			epsi = epsi*0.5;
 		else
 			break;
 		flag = GA_FOP_2(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_middle, PSO_t);
@@ -1360,8 +1344,14 @@ int change_epsi_type2(double* Out, const double* rv0, const double* rv1, double 
 			epsi = epsi - 0.001;
 		else if (epsi > 0.0485)
 			epsi = epsi - 0.0005;
-		else if (epsi > 0.04)
+		else if (epsi > 0.045)
 			epsi = epsi - 0.0001;
+		else if (epsi > 0.0226)
+			epsi = epsi - 0.00005;
+		else if (epsi > 0.00003)
+			epsi = epsi - 0.00001;
+		else if (epsi > 0.000003)
+			epsi = epsi - 0.000001;
 		else
 			break;
 		flag = GA_FOP_type2_process(Out, rv0, rv1, m0, tof, epsi, MaxGuessNum, rv_middle, PSO_t);
