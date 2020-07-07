@@ -132,7 +132,6 @@ void bi_integrate(const double* x0, double t0, double tf, double h, double* xf, 
 {
 	double SF0 = 1.0, SF1 = 1.0, dSF, ddSF;
 	double dt = h, dt1 = 0.0, dt2 = 0.0;
-	int i;
 	double* xs = new double[dim];
 	double dfpara[2] = {0.0};
 	dfpara[0] = epsi;
@@ -303,7 +302,6 @@ void bang_integrate(const double* x0, double t0, double tf, double h, double* xf
 {
 	double SF0 = 1.0, SF1 = 1.0, dSF, ddSF;
 	double dt = h, dt1 = 0.0, dt2 = 0.0;
-	int i;
 	double* xs = new double[dim];
 	double dfpara[2] = {0.0};
 	dfpara[0] = 0.0; // 强行设置同伦参数为0.0，在后面并没有用到，只是为了保持函数形式的一致
